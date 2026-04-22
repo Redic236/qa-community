@@ -28,11 +28,17 @@ export function errorHandler(
   }
 
   if (err instanceof ZodError) {
-    res.status(400).json({
+    // fieldErrors leaks schema shape (field names, inner error codes). Useful
+    // for dev debugging, but in production we hand back just the localised
+    // message so attackers can't probe for fields or enumerate shapes.
+    const body: Record<string, unknown> = {
       success: false,
       error: tr(req, 'validationFailed', 'Validation failed'),
-      details: err.flatten().fieldErrors,
-    });
+    };
+    if (process.env.NODE_ENV !== 'production') {
+      body.details = err.flatten().fieldErrors;
+    }
+    res.status(400).json(body);
     return;
   }
 

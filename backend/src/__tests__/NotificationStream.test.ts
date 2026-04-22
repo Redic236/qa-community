@@ -111,30 +111,34 @@ describe('NotificationStream — pub/sub adapter wired', () => {
     expect(data).toBeTruthy();
   });
 
-  test('rejected publish promise still tries local fanout as last resort', async () => {
-    let savedHandler: ((msg: string) => void) | null = null;
+  test('rejected publish promise does NOT fall back to local fanout', async () => {
+    // Intentional behavior: when the pub/sub adapter is wired and publish
+    // rejects, we log and move on — we do NOT also deliver locally, because
+    // a "publish failed" response from Redis frequently means the message
+    // was delivered but the ACK was lost, so a local fallback would produce
+    // a duplicate event for every connected subscriber on this instance.
     const adapter: PubSubAdapter = {
       publish: () => Promise.reject(new Error('redis is down')),
-      subscribe: (_c, h) => {
-        savedHandler = h;
-      },
+      subscribe: () => undefined,
     };
     NotificationStream.initPubSub(adapter);
     await NotificationStream.waitForPubSubReady();
-    expect(savedHandler).not.toBeNull();
 
     const { res, writes } = makeFakeRes();
     NotificationStream.subscribe(8, res);
 
-    // Suppress the [NotificationStream] publish failed warning while we exercise
-    // the failure path — keeps the test output clean.
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
     NotificationStream.publish(8, fakeNotification({ id: 1234 }));
-    // Let the rejection microtask + recovery fanout run.
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(writes.find((w) => w.includes('"id":1234'))).toBeTruthy();
+    // No local fanout → no event written for that id.
+    expect(writes.find((w) => w.includes('"id":1234'))).toBeFalsy();
+    // But we DID log the failure.
+    expect(warn).toHaveBeenCalledWith(
+      '[NotificationStream] publish failed:',
+      'redis is down'
+    );
     warn.mockRestore();
   });
 });

@@ -238,6 +238,16 @@ export default function HomePage() {
                         )
                       }
                       aria-pressed={question.liked === true}
+                      // Give a visual cue (greyed cursor) that clicking won't
+                      // toggle anything — the onClick just surfaces a toast
+                      // when the viewer is the author. Anonymous viewers
+                      // still look clickable because clicking DOES do
+                      // something (navigates to login).
+                      style={
+                        me && question.authorId === me.id
+                          ? { cursor: 'not-allowed' }
+                          : undefined
+                      }
                     >
                       {question.votes}
                     </Button>

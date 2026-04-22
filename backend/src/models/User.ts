@@ -45,6 +45,7 @@ export const initUserModel = (sequelize: Sequelize): void => {
       tableName: 'users',
       modelName: 'User',
       underscored: true,
+      indexes: [{ fields: ['points'], name: 'users_points_idx' }],
     }
   );
 };

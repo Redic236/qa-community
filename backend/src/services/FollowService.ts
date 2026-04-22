@@ -35,22 +35,34 @@ export class FollowService {
       });
     }
 
-    const existing = await Follow.findOne({
+    // Race-safe toggle: two concurrent follow clicks (double tap, two tabs)
+    // used to race between findOne + create, with one winning and the other
+    // hitting the unique-constraint and bubbling as 500. findOrCreate is
+    // atomic against the uk → the loser cleanly resolves as "already
+    // followed" and unwinds.
+    const [, created] = await Follow.findOrCreate({
       where: {
         followerId: input.followerId,
         targetType: input.targetType,
         targetId: input.targetId,
       },
+      defaults: {
+        followerId: input.followerId,
+        targetType: input.targetType,
+        targetId: input.targetId,
+      },
     });
-    if (existing) {
-      await existing.destroy();
+    if (!created) {
+      // Already followed → this click was an unfollow.
+      await Follow.destroy({
+        where: {
+          followerId: input.followerId,
+          targetType: input.targetType,
+          targetId: input.targetId,
+        },
+      });
       return { following: false };
     }
-    await Follow.create({
-      followerId: input.followerId,
-      targetType: input.targetType,
-      targetId: input.targetId,
-    });
     return { following: true };
   }
 

@@ -8,7 +8,11 @@ import {
   EVENT_METRICS,
 } from '../utils/achievements';
 import { NotificationService } from './NotificationService';
+import { CacheService } from './CacheService';
 import { NOTIFICATION_TYPES } from '../utils/constants';
+
+const LIST_CACHE_TTL_SECONDS = 60;
+const listCacheKey = (userId: number): string => `ach:list:${userId}:v1`;
 
 export interface AchievementStatus {
   code: string;
@@ -93,6 +97,9 @@ export class AchievementService {
       try {
         await UserAchievement.create({ userId, achievementCode: ach.code });
         unlocked.push(ach.code);
+        // Bust the per-user list cache so the next GET /achievements/me
+        // reflects the new unlock instead of serving the 60s-old snapshot.
+        await CacheService.del(listCacheKey(userId));
         // Fan-out: one notification per unlock. Failing to notify shouldn't
         // roll back the unlock itself — NotificationService is fail-open.
         await NotificationService.notify({
@@ -114,8 +121,17 @@ export class AchievementService {
   /**
    * Full list of achievements annotated with the user's unlock state + current
    * progress towards the threshold. Used by the dashboard UI.
+   *
+   * Cached per-user for 60s. A fresh unlock writes via checkAndGrant which
+   * invalidates the key, so the wall flashes live from the SSE push; the
+   * cache only absorbs the N=5 metric counts + unlock-rows scan during
+   * idle browsing.
    */
   static async listFor(userId: number): Promise<AchievementStatus[]> {
+    const cacheKey = listCacheKey(userId);
+    const cached = await CacheService.get<AchievementStatus[]>(cacheKey);
+    if (cached) return cached;
+
     const rows = await UserAchievement.findAll({
       where: { userId },
       attributes: ['achievementCode', 'unlockedAt'],
@@ -131,7 +147,7 @@ export class AchievementService {
       })
     );
 
-    return ACHIEVEMENTS.map((a) => ({
+    const result: AchievementStatus[] = ACHIEVEMENTS.map((a) => ({
       code: a.code,
       tier: a.tier,
       metric: a.metric,
@@ -141,5 +157,7 @@ export class AchievementService {
       unlockedAt: unlockedMap.get(a.code) ?? null,
       progress: metricValues.get(a.metric) ?? 0,
     }));
+    await CacheService.set(cacheKey, result, LIST_CACHE_TTL_SECONDS);
+    return result;
   }
 }

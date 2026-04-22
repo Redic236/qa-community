@@ -357,6 +357,7 @@
     "backHome": "回到首页",
     "fetchFail": "网络异常，请检查后端服务是否启动",
     "unexpected": "Unexpected error",
+    "sessionExpired": "登录已过期，请重新登录",
     "invalidQuestionId": "无效的问题 ID"
   },
   "leaderboard": {

@@ -357,6 +357,7 @@
     "backHome": "Back to home",
     "fetchFail": "Network issue — make sure the backend is running",
     "unexpected": "Unexpected error",
+    "sessionExpired": "Your session has expired. Please log in again.",
     "invalidQuestionId": "Invalid question id"
   },
   "leaderboard": {

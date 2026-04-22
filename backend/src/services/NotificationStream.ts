@@ -18,6 +18,13 @@ export interface PubSubAdapter {
 
 const CHANNEL = 'qa:notifications';
 const HEARTBEAT_MS = 25_000;
+/**
+ * Cap concurrent SSE streams per user. Each connection holds a 25s-interval
+ * timer + an Express res reference, so an unbounded stream of EventSource
+ * instances from a malicious page could exhaust memory quickly. 5 is more
+ * than any legitimate browser tab pattern needs (one tab per device).
+ */
+const MAX_STREAMS_PER_USER = 5;
 
 const subscribers = new Map<number, Set<Subscriber>>();
 let pubsub: PubSubAdapter | null = null;
@@ -77,6 +84,14 @@ export class NotificationStream {
   }
 
   static subscribe(userId: number, res: Response): () => void {
+    // Enforce per-user connection cap BEFORE flushing headers — rejected
+    // clients get a plain 429 they can handle, not a half-open SSE stream.
+    const existing = subscribers.get(userId);
+    if (existing && existing.size >= MAX_STREAMS_PER_USER) {
+      res.status(429).end();
+      return () => undefined;
+    }
+
     res.status(200);
     res.set({
       'Content-Type': 'text/event-stream',
@@ -136,9 +151,13 @@ export class NotificationStream {
       );
       if (send && typeof (send as Promise<unknown>).catch === 'function') {
         (send as Promise<unknown>).catch((err: Error) => {
+          // Do NOT fan out locally as a fallback here: a "publish failed"
+          // response from Redis often means the ACK was dropped while the
+          // message was already delivered, so falling back would produce a
+          // duplicate event for every connected client on this instance.
+          // Logging is enough; the next publish will either succeed or the
+          // operator can restart the stream.
           console.warn('[NotificationStream] publish failed:', err.message);
-          // Last-resort: at least deliver to local subscribers if Redis just died.
-          fanoutLocal(userId, payload);
         });
       }
       return;

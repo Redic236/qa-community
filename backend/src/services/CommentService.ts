@@ -78,24 +78,28 @@ export class CommentService {
   }
 
   static async delete(id: number, actor: Actor): Promise<void> {
-    const comment = await Comment.findByPk(id);
-    if (!comment) throw new NotFoundError('Comment not found', 'commentNotFound');
-    if (comment.authorId !== actor.id && actor.role !== ROLES.ADMIN) {
-      throw new ForbiddenError(
-        'Only the comment author or an admin can delete',
-        'onlyCommentAuthorOrAdminDelete'
-      );
-    }
-    const questionId = await resolveQuestionId(comment.targetType, comment.targetId);
-    // Explicit cascade at the service layer rather than relying on FK
-    // behavior — keeps SQLite tests and MySQL prod consistent regardless of
-    // foreign_keys pragmas. Only root deletions fan out; replies just delete
-    // themselves.
-    await sequelize.transaction(async (t) => {
+    // Wrap load → authz → cascade → delete in one transaction so a concurrent
+    // edit / delete / reparent can't shear the flow. Previous version loaded
+    // the comment + resolved questionId outside the tx, which left a window
+    // where the row could be mutated between the check and the destroy.
+    const questionId = await sequelize.transaction(async (t) => {
+      const comment = await Comment.findByPk(id, { transaction: t });
+      if (!comment) throw new NotFoundError('Comment not found', 'commentNotFound');
+      if (comment.authorId !== actor.id && actor.role !== ROLES.ADMIN) {
+        throw new ForbiddenError(
+          'Only the comment author or an admin can delete',
+          'onlyCommentAuthorOrAdminDelete'
+        );
+      }
+      const qId = await resolveQuestionId(comment.targetType, comment.targetId);
+      // Explicit cascade at the service layer rather than relying on FK
+      // behavior — keeps SQLite tests and MySQL prod consistent regardless
+      // of foreign_keys pragmas. Only root deletions fan out.
       if (comment.parentId === null) {
         await Comment.destroy({ where: { parentId: id }, transaction: t });
       }
       await comment.destroy({ transaction: t });
+      return qId;
     });
     if (questionId !== null) {
       await CacheService.del(cacheKeys.questionDetail(questionId));

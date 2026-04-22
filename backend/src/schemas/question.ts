@@ -2,7 +2,10 @@ import { z } from 'zod';
 
 export const createQuestionSchema = z.object({
   title: z.string().min(5).max(200),
-  content: z.string().min(10),
+  // 20000 is ~10 pages of formatted text — generous ceiling vs. any realistic
+  // question body, but still bounded so a rogue client can't push multi-MB
+  // payloads into the question detail cache / SSE broadcasts.
+  content: z.string().min(10).max(20000),
   tags: z.array(z.string().min(1).max(50)).max(5).optional(),
 });
 
@@ -11,7 +14,7 @@ export type CreateQuestionBody = z.infer<typeof createQuestionSchema>;
 export const updateQuestionSchema = z
   .object({
     title: z.string().min(5).max(200).optional(),
-    content: z.string().min(10).optional(),
+    content: z.string().min(10).max(20000).optional(),
     tags: z.array(z.string().min(1).max(50)).max(5).optional(),
   })
   .refine(

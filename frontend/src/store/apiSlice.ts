@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery, type BaseQueryFn } from '@reduxjs/toolkit/query/react';
 import type { FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import { message } from 'antd';
 
 // RTK Query doesn't re-export PatchHandle at the public entry, but the
 // return of updateQueryData() dispatch is typed as a ThunkAction<PatchHandle>.
@@ -49,7 +50,10 @@ const rawBaseQuery = fetchBaseQuery({
   },
 });
 
-// Wrap to auto-logout on 401 so stale/expired tokens don't leave the UI stuck.
+// Wrap to auto-logout on 401 so stale/expired tokens don't leave the UI
+// stuck. Before dispatching logout we surface a warning toast so the user
+// understands *why* they're being kicked to /login (otherwise a silent
+// redirect mid-session feels like a broken app).
 const baseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
   args,
   api,
@@ -57,6 +61,7 @@ const baseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> =
 ) => {
   const result = await rawBaseQuery(args, api, extraOptions);
   if (result.error?.status === 401 && (api.getState() as RootState).auth.token) {
+    message.warning(i18n.t('errors.sessionExpired'));
     api.dispatch(logout());
   }
   return result;

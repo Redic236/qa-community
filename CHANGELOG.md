@@ -2,6 +2,52 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/) · 版本号遵循 [SemVer](https://semver.org/)
 
+## [1.1.0] — 2026-04-22
+
+从 v1.0.0 代码审查的 MEDIUM / LOW / UX 清单里挑了 12 项硬化 + 性能 + 体验改进。
+无 API 破坏性变更；新增 1 条 migration（users.points 索引）。
+
+### 修复 / 硬化（Changed）
+
+- **FollowService.toggle 幂等化**：改 `Follow.findOrCreate`；双击 / 多标签并发 follow 不再因 unique 约束 500
+- **CommentService.delete 事务化**：整个 load → authz → cascade → delete 包在一个事务，消除中间脏读窗口
+- **NotificationStream publish 失败不再本地兜底**：Redis ACK 丢失 ≠ 消息丢失，本地 fanout 会导致所有在线客户端收到重复事件。现在只记日志
+- **errorHandler 生产环境不透 Zod `fieldErrors`**：仅 `NODE_ENV !== 'production'` 时附带 `details`，避免向攻击者暴露 schema 形状
+- **schemas 加 content `.max(20000)`**：question / answer 内容长度上限；评论已有 500；防止超大 payload 拖慢缓存 + SSE 广播
+- **bcrypt `SALT_ROUNDS` 10 → 12**：OWASP 2024 推荐值；新增 `BCRYPT_ROUNDS` 环境变量方便调整（测试用 4 以保持速度）
+
+### 性能（Performance）
+
+- **AdminStatsService SQL GROUP BY**：每日趋势由"拉全部行 + JS 分桶"改为 `SELECT DATE(...) AS day, COUNT(*) GROUP BY day` — 数据库层聚合，结果行数为天数上限（7/30/90），不再随表规模增长
+- **AdminStatsService 标签统计加 Redis 缓存**：5 分钟 TTL；Question `LIMIT 10000` 防止极端表规模拖慢首次计算
+- **AchievementService.listFor 加 Redis 缓存**：每用户 60s 缓存；解锁时自动失效；原本每次 profile 页请求跑 5 次 metric 聚合查询，现在空闲浏览期几乎零 DB 压力
+- **SSE 每用户连接上限 5 条**：超出返回 429；防止恶意脚本用无限 EventSource 耗尽内存（每连接持 25s 心跳定时器）
+- **users.points 索引**：支撑 `ORDER BY points DESC` 扫描（leaderboard / admin top-users）；新 migration + User 模型同步
+
+### 用户体验（UX）
+
+- **401 自动退出加 "会话过期" 提示**：RTK Query baseQuery 检测 401 时先 `message.warning(t('errors.sessionExpired'))` 再 `dispatch(logout())`；避免用户被静默踢出不知所以
+- **首页自点赞按钮 `cursor: not-allowed`**：内容作者悬停自己问题的点赞按钮时鼠标变禁用样式，对应 tooltip 的"不能给自己点赞"
+
+### 开发体验
+
+- **jest 用 `BCRYPT_ROUNDS=4`**：测试套件从 ~55s 恢复到 ~8s（bcrypt 12 的开销太大）
+
+### Migration
+
+```
+20260422000005-users-points-index.ts  # CREATE INDEX ON users(points)
+```
+
+### 验证
+
+- 后端 tsc + 148 Jest 全绿
+- E2E 20/20 通过
+- 前端 tsc 通过
+- dev MySQL 已应用新 migration
+
+---
+
 ## [1.0.1] — 2026-04-22
 
 安全补丁版本。v1.0.0 代码审查中发现的 7 项 CRITICAL/HIGH 问题修复。

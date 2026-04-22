@@ -5,7 +5,11 @@ import { env } from '../config/env';
 import { ROLES, type Role } from '../utils/constants';
 import { BadRequestError, NotFoundError, UnauthorizedError } from '../utils/errors';
 
-const SALT_ROUNDS = 10;
+// OWASP 2024 password-storage cheatsheet recommends ≥ 10 for bcrypt; 12
+// offers a comfortable margin against GPU hash-rate growth without making
+// legitimate login / register too slow (adds ~200ms per call). Tune via
+// BCRYPT_ROUNDS if a future host has different CPU characteristics.
+const SALT_ROUNDS = Number(process.env.BCRYPT_ROUNDS ?? 12);
 
 export interface UserDto {
   id: number;
