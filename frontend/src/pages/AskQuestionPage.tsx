@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useCreateQuestionMutation } from '@/store/apiSlice';
 import { getApiErrorMessage } from '@/utils/errors';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useUnsavedChangesWarning } from '@/hooks/useUnsavedChangesWarning';
 
 const schema = z.object({
   title: z
@@ -31,7 +32,7 @@ export default function AskQuestionPage() {
     handleSubmit,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty, isSubmitSuccessful },
   } = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: { title: '', content: '', tags: [] },
@@ -39,6 +40,10 @@ export default function AskQuestionPage() {
   });
 
   const tags = watch('tags') ?? [];
+
+  // Guard draft content against accidental tab close / reload. React-router
+  // in-app navigation isn't affected, so the post-submit navigate() is fine.
+  useUnsavedChangesWarning(isDirty && !isSubmitSuccessful);
 
   const addTag = () => {
     const v = tagInput.trim().toLowerCase();

@@ -40,6 +40,7 @@ import {
 } from '@/store/apiSlice';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useUnsavedChangesWarning } from '@/hooks/useUnsavedChangesWarning';
 import { getApiErrorMessage } from '@/utils/errors';
 import { useTranslation } from 'react-i18next';
 import EditQuestionModal from '@/components/EditQuestionModal';
@@ -48,6 +49,7 @@ import EmptyState from '@/components/EmptyState';
 import ReportButton from '@/components/ReportButton';
 import FollowButton from '@/components/FollowButton';
 import CommentSection from '@/components/CommentSection';
+import TimeAgo from '@/components/TimeAgo';
 import type { Answer } from '@/types/models';
 
 const answerSchema = z.object({
@@ -83,12 +85,16 @@ export default function QuestionDetailPage() {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<AnswerValues>({
     resolver: zodResolver(answerSchema),
     defaultValues: { content: '' },
     mode: 'onTouched',
   });
+
+  // Answer draft guard. `reset()` on success clears isDirty, so posting a
+  // reply then navigating away doesn't re-trigger the prompt.
+  useUnsavedChangesWarning(isDirty);
 
   usePageTitle(data?.title ?? t('errors.invalidQuestionId'));
 
@@ -269,8 +275,9 @@ export default function QuestionDetailPage() {
                 </Tag>
               ))}
               <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                {t('question.askedAt', { time: new Date(data.createdAt).toLocaleString() })}
+                {t('question.askedLabel')}
               </Typography.Text>
+              <TimeAgo iso={data.createdAt} style={{ fontSize: 12 }} />
             </Space>
             <Typography.Paragraph
               style={{ whiteSpace: 'pre-wrap', marginBottom: 0, wordBreak: 'break-word' }}
@@ -358,9 +365,7 @@ export default function QuestionDetailPage() {
                       {a.content}
                     </Typography.Paragraph>
                     <Space wrap>
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                        {new Date(a.createdAt).toLocaleString()}
-                      </Typography.Text>
+                      <TimeAgo iso={a.createdAt} style={{ fontSize: 12 }} />
                       {isAuthor && !a.isAccepted && (
                         <Button
                           size="small"

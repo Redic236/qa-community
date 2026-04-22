@@ -82,7 +82,7 @@
     "likeLoginPrompt": "Log in to like"
   },
   "question": {
-    "askedAt": "Asked at {{time}}",
+    "askedLabel": "Asked",
     "solved": "Solved",
     "unsolved": "Unsolved",
     "publishTitle": "Ask a question",

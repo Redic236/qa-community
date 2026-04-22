@@ -58,6 +58,18 @@ export default function AdminDashboardPage() {
   const { token: tk } = theme.useToken();
   const gridStroke = tk.colorBorderSecondary;
   const tickFill = tk.colorTextSecondary;
+  // Recharts Tooltip/Legend default to white bg + black text. In dark mode
+  // that keeps them legible (white card on black page) but it looks glued-on.
+  // Overriding with AntD surface tokens makes them blend with the Card.
+  const tooltipContentStyle = {
+    background: tk.colorBgElevated,
+    border: `1px solid ${tk.colorBorderSecondary}`,
+    borderRadius: tk.borderRadiusLG,
+    color: tk.colorText,
+  };
+  const tooltipLabelStyle = { color: tk.colorText };
+  const tooltipItemStyle = { color: tk.colorText };
+  const legendWrapperStyle = { color: tk.colorText };
 
   if (isFetching && !data) {
     return (
@@ -165,8 +177,12 @@ export default function AdminDashboardPage() {
               <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
               <XAxis dataKey="date" tick={{ fontSize: 12, fill: tickFill }} />
               <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: tickFill }} />
-              <Tooltip />
-              <Legend />
+              <Tooltip
+                contentStyle={tooltipContentStyle}
+                labelStyle={tooltipLabelStyle}
+                itemStyle={tooltipItemStyle}
+              />
+              <Legend wrapperStyle={legendWrapperStyle} />
               <Line
                 type="monotone"
                 dataKey="questions"
@@ -256,7 +272,12 @@ export default function AdminDashboardPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
                     <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: tickFill }} />
                     <YAxis type="category" dataKey="tag" tick={{ fontSize: 12, fill: tickFill }} width={80} />
-                    <Tooltip />
+                    <Tooltip
+                      contentStyle={tooltipContentStyle}
+                      labelStyle={tooltipLabelStyle}
+                      itemStyle={tooltipItemStyle}
+                      cursor={{ fill: tk.colorFillTertiary }}
+                    />
                     <Bar
                       dataKey="count"
                       name={t('dashboard.topTagsColumns.count')}

@@ -9,6 +9,7 @@ import {
 } from '@/store/apiSlice';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { getApiErrorMessage } from '@/utils/errors';
+import TimeAgo from '@/components/TimeAgo';
 import type { Comment, VoteTargetType } from '@/types/models';
 
 interface Props {
@@ -115,8 +116,8 @@ export default function CommentSection({ targetType, targetId, questionId, comme
       <Typography.Text style={{ whiteSpace: 'pre-wrap' }}>{c.content}</Typography.Text>{' '}
       <Typography.Text type="secondary" style={{ fontSize: 12 }}>
         · {t('comment.userPrefix', { id: c.authorId })} ·{' '}
-        {new Date(c.createdAt).toLocaleString()}
       </Typography.Text>
+      <TimeAgo iso={c.createdAt} style={{ fontSize: 12 }} />
       {(me?.id === c.authorId || me?.role === 'admin') && (
         <Popconfirm
           title={t('comment.deleteConfirm')}

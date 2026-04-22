@@ -38,6 +38,7 @@ import { getApiErrorMessage } from '@/utils/errors';
 import EditProfileModal from '@/components/EditProfileModal';
 import EmptyState from '@/components/EmptyState';
 import LevelBadge from '@/components/LevelBadge';
+import TimeAgo from '@/components/TimeAgo';
 import { getLevel, levelProgress } from '@/utils/levels';
 import type { PointRecord, PointType } from '@/types/models';
 
@@ -273,9 +274,7 @@ function FollowedPanel() {
                               {tg}
                             </Tag>
                           ))}
-                          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                            {new Date(q.createdAt).toLocaleString()}
-                          </Typography.Text>
+                          <TimeAgo iso={q.createdAt} style={{ fontSize: 12 }} />
                         </Space>
                       }
                     />

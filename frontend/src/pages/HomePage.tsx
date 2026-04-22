@@ -28,6 +28,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import EmptyState from '@/components/EmptyState';
 import { LoadingList } from '@/components/LoadingCard';
+import TimeAgo from '@/components/TimeAgo';
 import { prefetchRoute } from '@/utils/prefetch';
 import type { Question, QuestionSort } from '@/types/models';
 
@@ -285,9 +286,7 @@ export default function HomePage() {
                           {tg}
                         </Tag>
                       ))}
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                        {new Date(question.createdAt).toLocaleString()}
-                      </Typography.Text>
+                      <TimeAgo iso={question.createdAt} style={{ fontSize: 12 }} />
                     </Space>
                   }
                 />

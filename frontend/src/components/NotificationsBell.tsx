@@ -9,6 +9,7 @@ import {
 } from '@/store/apiSlice';
 import { useAppSelector } from '@/store';
 import { useNotificationStream } from '@/hooks/useNotificationStream';
+import TimeAgo from '@/components/TimeAgo';
 import type { AppNotification } from '@/types/models';
 
 function targetUrlOf(n: AppNotification): string | null {
@@ -117,9 +118,7 @@ export default function NotificationsBell() {
                 <Typography.Text strong={!n.read} style={{ fontSize: 13 }}>
                   {t(`notification.types.${n.type}`)}
                 </Typography.Text>
-                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                  {new Date(n.createdAt).toLocaleString()}
-                </Typography.Text>
+                <TimeAgo iso={n.createdAt} style={{ fontSize: 12 }} />
               </Space>
             </List.Item>
           )}

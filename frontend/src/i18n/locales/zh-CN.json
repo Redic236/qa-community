@@ -82,7 +82,7 @@
     "likeLoginPrompt": "登录后即可点赞"
   },
   "question": {
-    "askedAt": "提问于 {{time}}",
+    "askedLabel": "提问于",
     "solved": "已解决",
     "unsolved": "未解决",
     "publishTitle": "发布问题",

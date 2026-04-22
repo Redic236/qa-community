@@ -2,6 +2,35 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/) · 版本号遵循 [SemVer](https://semver.org/)
 
+## [1.1.1] — 2026-04-22
+
+收尾 v1.0.0 代码审查里剩余的 3 项 UX / 暗色模式 polish。纯前端改动，无 API / DB 变更。
+
+### 用户体验（UX）
+
+- **未保存草稿保护**：AskQuestionPage 和 QuestionDetailPage 回答框在用户改动表单后注册 `beforeunload` 监听；关闭标签页 / 刷新 / 输入新 URL 会触发浏览器原生"离开此页？"对话框。react-router 内跳转（发布成功后 `navigate(...)`）不受影响
+- **相对时间显示**：问题列表 / 问题详情 / 评论 / 通知 / 个人主页问题列表的时间戳改成 "3 分钟前" / "3 minutes ago"，跟随 i18n 语言切换；鼠标悬浮显示完整绝对时间戳
+- **recharts 暗色模式**：AdminDashboardPage 的 LineChart / BarChart Tooltip 和 Legend 颜色改走 `theme.useToken()`；补上 v1.1.0 里 grid + axis 暗色化的最后一块
+
+### 开发体验
+
+- **显式 dayjs 依赖**：antd 是 peer 传递引入的，避免未来 antd 换日期库时代码静默坏掉
+
+### 新增文件
+
+```
+frontend/src/hooks/useUnsavedChangesWarning.ts
+frontend/src/components/TimeAgo.tsx
+frontend/src/utils/time.ts
+```
+
+### 验证
+
+- 前端 tsc + vite build 通过（+dayjs 约 +2KB gzip）
+- E2E 20/20 通过
+
+---
+
 ## [1.1.0] — 2026-04-22
 
 从 v1.0.0 代码审查的 MEDIUM / LOW / UX 清单里挑了 12 项硬化 + 性能 + 体验改进。
