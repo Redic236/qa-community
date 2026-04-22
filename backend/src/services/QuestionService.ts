@@ -5,6 +5,8 @@ import { PointsService } from './PointsService';
 import { ModerationService } from './ModerationService';
 import { CacheService, cacheKeys } from './CacheService';
 import { NotificationService, NOTIF } from './NotificationService';
+import { FollowService } from './FollowService';
+import { FOLLOW_TARGET_TYPE } from '../models/Follow';
 import { ROLES, type Role } from '../utils/constants';
 import { ForbiddenError, NotFoundError } from '../utils/errors';
 
@@ -58,8 +60,8 @@ export class QuestionService {
   static async create(input: CreateQuestionInput): Promise<Question> {
     ModerationService.assertClean({ title: input.title, content: input.content });
 
-    return sequelize.transaction(async (t) => {
-      const question = await Question.create(
+    const question = await sequelize.transaction(async (t) => {
+      const q = await Question.create(
         {
           title: input.title,
           content: input.content,
@@ -69,10 +71,36 @@ export class QuestionService {
         { transaction: t }
       );
 
-      await PointsService.forAskQuestion(input.authorId, question.id, t);
+      await PointsService.forAskQuestion(input.authorId, q.id, t);
 
-      return question;
+      return q;
     });
+
+    // Fan-out to the author's followers — "X posted a new question". Done AFTER
+    // commit so a flaky follower query can't roll back the question creation.
+    void (async () => {
+      try {
+        const followerIds = await FollowService.followerIdsOf(
+          FOLLOW_TARGET_TYPE.USER,
+          input.authorId
+        );
+        for (const userId of followerIds) {
+          if (userId === input.authorId) continue;
+          await NotificationService.notify({
+            userId,
+            type: NOTIF.FOLLOWED_USER_POSTED,
+            payload: {
+              questionId: question.id,
+              authorId: input.authorId,
+            },
+          });
+        }
+      } catch (err) {
+        console.warn('[follow-fanout] question create:', (err as Error).message);
+      }
+    })();
+
+    return question;
   }
 
   static async list(input: ListQuestionsInput): Promise<ListQuestionsResult> {

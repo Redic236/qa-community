@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { app } from '../app';
-import { sequelize, User, Question, Answer, Vote, PointRecord, Report, Comment, Notification } from '../models';
+import { sequelize, User, Question, Answer, Vote, PointRecord, Report, Comment, Notification, Follow } from '../models';
 import { ROLES } from '../utils/constants';
 import { POINTS_RULES } from '../utils/constants';
 import { VOTE_TARGET_TYPE } from '../models/Vote';
@@ -14,6 +14,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
+  await Follow.destroy({ where: {}, truncate: true });
   await Notification.destroy({ where: {}, truncate: true });
   await Comment.destroy({ where: {}, truncate: true });
   await Report.destroy({ where: {}, truncate: true });
@@ -1998,5 +1999,193 @@ describe('GET /api/leaderboard', () => {
     expect(res.status).toBe(200);
     expect(res.headers['etag']).toMatch(/^W\//);
     expect(res.headers['cache-control']).toContain('must-revalidate');
+  });
+});
+
+describe('Follow — questions & users', () => {
+  test('toggle follow on a question flips state, idempotent on repeat', async () => {
+    const asker = await registerUser('f_asker');
+    const viewer = await registerUser('f_viewer');
+    const q = await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${asker.token}`)
+      .send({ title: 'Follow me title here', content: 'Follow me content body.' });
+
+    const on = await request(app)
+      .post('/api/follows')
+      .set('Authorization', `Bearer ${viewer.token}`)
+      .send({ targetType: 'question', targetId: q.body.data.id });
+    expect(on.status).toBe(200);
+    expect(on.body.data.following).toBe(true);
+
+    const off = await request(app)
+      .post('/api/follows')
+      .set('Authorization', `Bearer ${viewer.token}`)
+      .send({ targetType: 'question', targetId: q.body.data.id });
+    expect(off.body.data.following).toBe(false);
+
+    const onAgain = await request(app)
+      .post('/api/follows')
+      .set('Authorization', `Bearer ${viewer.token}`)
+      .send({ targetType: 'question', targetId: q.body.data.id });
+    expect(onAgain.body.data.following).toBe(true);
+  });
+
+  test('cannot follow yourself', async () => {
+    const me = await registerUser('f_self');
+    const res = await request(app)
+      .post('/api/follows')
+      .set('Authorization', `Bearer ${me.token}`)
+      .send({ targetType: 'user', targetId: me.id });
+    expect(res.status).toBe(400);
+  });
+
+  test('follow non-existent target returns 404', async () => {
+    const me = await registerUser('f_missing');
+    const res = await request(app)
+      .post('/api/follows')
+      .set('Authorization', `Bearer ${me.token}`)
+      .send({ targetType: 'question', targetId: 99999 });
+    expect(res.status).toBe(404);
+  });
+
+  test('GET /api/follows/me?targetType=question returns followed question rows', async () => {
+    const asker = await registerUser('mine_asker');
+    const viewer = await registerUser('mine_viewer');
+    const q1 = await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${asker.token}`)
+      .send({ title: 'Followed one title', content: 'Followed one content body.' });
+    const q2 = await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${asker.token}`)
+      .send({ title: 'Not followed title', content: 'Not followed content body.' });
+
+    await request(app)
+      .post('/api/follows')
+      .set('Authorization', `Bearer ${viewer.token}`)
+      .send({ targetType: 'question', targetId: q1.body.data.id });
+
+    const res = await request(app)
+      .get('/api/follows/me?targetType=question')
+      .set('Authorization', `Bearer ${viewer.token}`);
+    expect(res.status).toBe(200);
+    const ids = (res.body.data as { id: number }[]).map((r) => r.id);
+    expect(ids).toContain(q1.body.data.id);
+    expect(ids).not.toContain(q2.body.data.id);
+    expect(res.body.data[0]).toHaveProperty('title');
+    expect(res.body.data[0]).toHaveProperty('tags');
+  });
+
+  test('GET /api/follows/me?targetType=user returns safe user DTO', async () => {
+    const alice = await registerUser('uf_alice');
+    const bob = await registerUser('uf_bob');
+    await request(app)
+      .post('/api/follows')
+      .set('Authorization', `Bearer ${alice.token}`)
+      .send({ targetType: 'user', targetId: bob.id });
+
+    const res = await request(app)
+      .get('/api/follows/me?targetType=user')
+      .set('Authorization', `Bearer ${alice.token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveLength(1);
+    expect(res.body.data[0].id).toBe(bob.id);
+    expect(res.body.data[0]).toHaveProperty('username');
+    expect(res.body.data[0]).not.toHaveProperty('email');
+    expect(res.body.data[0]).not.toHaveProperty('password');
+  });
+
+  test('question detail surfaces followingQuestion + followingAuthor booleans', async () => {
+    const asker = await registerUser('detail_asker');
+    const viewer = await registerUser('detail_viewer');
+    const q = await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${asker.token}`)
+      .send({ title: 'Detail follow title', content: 'Detail follow content body.' });
+
+    const before = await request(app)
+      .get(`/api/questions/${q.body.data.id}`)
+      .set('Authorization', `Bearer ${viewer.token}`);
+    expect(before.body.data.followingQuestion).toBe(false);
+    expect(before.body.data.followingAuthor).toBe(false);
+
+    await request(app)
+      .post('/api/follows')
+      .set('Authorization', `Bearer ${viewer.token}`)
+      .send({ targetType: 'question', targetId: q.body.data.id });
+    await request(app)
+      .post('/api/follows')
+      .set('Authorization', `Bearer ${viewer.token}`)
+      .send({ targetType: 'user', targetId: asker.id });
+
+    const after = await request(app)
+      .get(`/api/questions/${q.body.data.id}`)
+      .set('Authorization', `Bearer ${viewer.token}`);
+    expect(after.body.data.followingQuestion).toBe(true);
+    expect(after.body.data.followingAuthor).toBe(true);
+  });
+
+  test('following a user: new question fans out notification to follower', async () => {
+    const author = await registerUser('f_author');
+    const fan = await registerUser('f_fan');
+
+    await request(app)
+      .post('/api/follows')
+      .set('Authorization', `Bearer ${fan.token}`)
+      .send({ targetType: 'user', targetId: author.id });
+
+    await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${author.token}`)
+      .send({ title: 'Fanout title here', content: 'Fanout content body here.' });
+
+    await new Promise((r) => setTimeout(r, 50));
+
+    const notif = await request(app)
+      .get('/api/notifications')
+      .set('Authorization', `Bearer ${fan.token}`);
+    const types = (notif.body.data as { type: string }[]).map((n) => n.type);
+    expect(types).toContain('followed_user_posted');
+  });
+
+  test('following a question: new answer fans out to follower, skips asker + answerer', async () => {
+    const asker = await registerUser('fq_asker');
+    const answerer = await registerUser('fq_answerer');
+    const fan = await registerUser('fq_fan');
+
+    const q = await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${asker.token}`)
+      .send({ title: 'QFan title here', content: 'QFan content body here.' });
+
+    await request(app)
+      .post('/api/follows')
+      .set('Authorization', `Bearer ${fan.token}`)
+      .send({ targetType: 'question', targetId: q.body.data.id });
+    await request(app)
+      .post('/api/follows')
+      .set('Authorization', `Bearer ${asker.token}`)
+      .send({ targetType: 'question', targetId: q.body.data.id });
+
+    await request(app)
+      .post(`/api/questions/${q.body.data.id}/answers`)
+      .set('Authorization', `Bearer ${answerer.token}`)
+      .send({ content: 'An answer to the followed question.' });
+
+    await new Promise((r) => setTimeout(r, 50));
+
+    const fanNotif = await request(app)
+      .get('/api/notifications')
+      .set('Authorization', `Bearer ${fan.token}`);
+    const fanTypes = (fanNotif.body.data as { type: string }[]).map((n) => n.type);
+    expect(fanTypes).toContain('followed_question_answered');
+
+    const askerNotif = await request(app)
+      .get('/api/notifications')
+      .set('Authorization', `Bearer ${asker.token}`);
+    const askerTypes = (askerNotif.body.data as { type: string }[]).map((n) => n.type);
+    expect(askerTypes.filter((t) => t === 'followed_question_answered')).toHaveLength(0);
+    expect(askerTypes).toContain('question_answered');
   });
 });

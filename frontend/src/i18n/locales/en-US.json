@@ -151,6 +151,12 @@
     "minWarning": "Comment must be at least 2 characters",
     "userPrefix": "user #{{id}}"
   },
+  "follow": {
+    "followQuestion": "Follow question",
+    "unfollowQuestion": "Following",
+    "followUser": "Follow author",
+    "unfollowUser": "Following"
+  },
   "profile": {
     "currentPoints": "Points",
     "userId": "User ID",
@@ -167,6 +173,15 @@
       "avatarMustBeUrl": "Avatar must be an http(s) link",
       "newPasswordMin": "New password must be at least 6 characters",
       "currentPasswordRequired": "Changing password requires the current one"
+    },
+    "followed": {
+      "title": "My follows",
+      "tabs": {
+        "questions": "Questions",
+        "users": "Users"
+      },
+      "emptyQuestions": "No followed questions yet",
+      "emptyUsers": "No followed users yet"
     },
     "history": {
       "title": "Points history",
@@ -293,7 +308,9 @@
       "answer_accepted": "accepted your answer",
       "question_liked": "liked your question",
       "answer_liked": "liked your answer",
-      "content_removed": "an admin removed your content"
+      "content_removed": "an admin removed your content",
+      "followed_question_answered": "a question you follow has a new answer",
+      "followed_user_posted": "a user you follow posted a new question"
     }
   },
   "errors": {

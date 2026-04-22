@@ -77,6 +77,8 @@ export const NOTIFICATION_TYPES = {
   QUESTION_LIKED: 'question_liked',
   ANSWER_LIKED: 'answer_liked',
   CONTENT_REMOVED: 'content_removed',
+  FOLLOWED_QUESTION_ANSWERED: 'followed_question_answered',
+  FOLLOWED_USER_POSTED: 'followed_user_posted',
 } as const;
 export type NotificationType =
   (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];

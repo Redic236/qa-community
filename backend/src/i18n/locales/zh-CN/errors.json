@@ -25,6 +25,7 @@
   "reportNotFound": "举报不存在",
   "reportAlreadyHandled": "该举报已处理",
   "cannotReportOwn": "不能举报自己的内容",
+  "cannotFollowSelf": "不能关注自己",
   "alreadyReported": "你已经举报过这条内容，正在等待处理",
   "targetNotFound": "{{targetType}} 不存在",
   "bannedWord": "内容包含违禁词 \"{{word}}\"（字段: {{field}}）",

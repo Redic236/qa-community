@@ -46,6 +46,7 @@ import EditQuestionModal from '@/components/EditQuestionModal';
 import EditAnswerModal from '@/components/EditAnswerModal';
 import EmptyState from '@/components/EmptyState';
 import ReportButton from '@/components/ReportButton';
+import FollowButton from '@/components/FollowButton';
 import CommentSection from '@/components/CommentSection';
 import type { Answer } from '@/types/models';
 
@@ -213,6 +214,22 @@ export default function QuestionDetailPage() {
                 </Tag>
               )}
               <Space style={{ marginLeft: 'auto' }} wrap>
+                {!isAuthor && (
+                  <FollowButton
+                    targetType="question"
+                    targetId={data.id}
+                    following={data.followingQuestion === true}
+                    questionId={data.id}
+                  />
+                )}
+                {!isAuthor && (
+                  <FollowButton
+                    targetType="user"
+                    targetId={data.authorId}
+                    following={data.followingAuthor === true}
+                    questionId={data.id}
+                  />
+                )}
                 {!isAuthor && (
                   <ReportButton
                     targetType="question"

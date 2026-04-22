@@ -5,6 +5,7 @@ import {
   Statistic,
   Space,
   Table,
+  Tabs,
   Tag,
   Typography,
   Alert,
@@ -15,13 +16,24 @@ import {
   Grid,
   ConfigProvider,
   Progress,
+  List,
 } from 'antd';
-import { UserOutlined, EditOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import {
+  UserOutlined,
+  EditOutlined,
+  CheckCircleTwoTone,
+  LikeOutlined,
+  MessageOutlined,
+} from '@ant-design/icons';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { useListMyPointsQuery } from '@/store/apiSlice';
+import {
+  useListMyPointsQuery,
+  useListMyFollowedQuestionsQuery,
+  useListMyFollowedUsersQuery,
+} from '@/store/apiSlice';
 import { getApiErrorMessage } from '@/utils/errors';
 import EditProfileModal from '@/components/EditProfileModal';
 import EmptyState from '@/components/EmptyState';
@@ -136,6 +148,8 @@ export default function ProfilePage() {
         </Descriptions>
       </Card>
 
+      <FollowedPanel />
+
       <Card title={t('profile.history.title')} styles={{ body: { padding: 0 } }}>
         {error && (
           <Alert type="error" message={getApiErrorMessage(error)} style={{ margin: 16 }} />
@@ -209,5 +223,104 @@ export default function ProfilePage() {
 
       <EditProfileModal open={editing} user={me} onClose={() => setEditing(false)} />
     </Space>
+  );
+}
+
+function FollowedPanel() {
+  const { t } = useTranslation();
+  const { data: qs, isFetching: loadingQs } = useListMyFollowedQuestionsQuery();
+  const { data: us, isFetching: loadingUs } = useListMyFollowedUsersQuery();
+
+  return (
+    <Card title={t('profile.followed.title')}>
+      <Tabs
+        items={[
+          {
+            key: 'questions',
+            label: t('profile.followed.tabs.questions'),
+            children: loadingQs ? (
+              <Skeleton active paragraph={{ rows: 3 }} />
+            ) : !qs || qs.length === 0 ? (
+              <EmptyState description={t('profile.followed.emptyQuestions')} />
+            ) : (
+              <List
+                itemLayout="horizontal"
+                dataSource={qs}
+                renderItem={(q) => (
+                  <List.Item
+                    key={q.id}
+                    actions={[
+                      <Space key="v">
+                        <LikeOutlined /> {q.votes}
+                      </Space>,
+                      <Space key="a">
+                        <MessageOutlined /> {q.answersCount}
+                      </Space>,
+                      q.isSolved ? (
+                        <Space key="s">
+                          <CheckCircleTwoTone twoToneColor="#52c41a" />{' '}
+                          {t('home.stats.solved')}
+                        </Space>
+                      ) : null,
+                    ].filter(Boolean)}
+                  >
+                    <List.Item.Meta
+                      title={<Link to={`/questions/${q.id}`}>{q.title}</Link>}
+                      description={
+                        <Space wrap size={4}>
+                          {q.tags.map((tg) => (
+                            <Tag key={tg} color="blue">
+                              {tg}
+                            </Tag>
+                          ))}
+                          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                            {new Date(q.createdAt).toLocaleString()}
+                          </Typography.Text>
+                        </Space>
+                      }
+                    />
+                  </List.Item>
+                )}
+              />
+            ),
+          },
+          {
+            key: 'users',
+            label: t('profile.followed.tabs.users'),
+            children: loadingUs ? (
+              <Skeleton active paragraph={{ rows: 3 }} />
+            ) : !us || us.length === 0 ? (
+              <EmptyState description={t('profile.followed.emptyUsers')} />
+            ) : (
+              <List
+                itemLayout="horizontal"
+                dataSource={us}
+                renderItem={(u) => (
+                  <List.Item key={u.id}>
+                    <List.Item.Meta
+                      avatar={
+                        <Avatar
+                          src={u.avatar ?? undefined}
+                          icon={<UserOutlined />}
+                          style={{ backgroundColor: '#1677ff' }}
+                        >
+                          {u.username.charAt(0).toUpperCase()}
+                        </Avatar>
+                      }
+                      title={u.username}
+                      description={
+                        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                          {t('profile.currentPoints')}: {u.points}
+                        </Typography.Text>
+                      }
+                    />
+                  </List.Item>
+                )}
+              />
+            ),
+          },
+        ]}
+      />
+    </Card>
   );
 }

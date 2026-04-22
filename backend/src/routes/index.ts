@@ -9,6 +9,7 @@ import commentsRouter from './comments';
 import notificationsRouter from './notifications';
 import adminRouter from './admin';
 import leaderboardRouter from './leaderboard';
+import followsRouter from './follows';
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use('/comments', commentsRouter);
 router.use('/notifications', notificationsRouter);
 router.use('/admin', adminRouter);
 router.use('/leaderboard', leaderboardRouter);
+router.use('/follows', followsRouter);
 
 export default router;

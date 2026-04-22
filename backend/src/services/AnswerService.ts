@@ -4,6 +4,8 @@ import { PointsService } from './PointsService';
 import { ModerationService } from './ModerationService';
 import { CacheService, cacheKeys } from './CacheService';
 import { NotificationService, NOTIF } from './NotificationService';
+import { FollowService } from './FollowService';
+import { FOLLOW_TARGET_TYPE } from '../models/Follow';
 import { ROLES, type Role } from '../utils/constants';
 import { ConflictError, ForbiddenError, NotFoundError } from '../utils/errors';
 
@@ -56,6 +58,33 @@ export class AnswerService {
       NOTIF.QUESTION_ANSWERED,
       { questionId: input.questionId, answerId: result.answer.id, fromUserId: input.authorId }
     );
+
+    // Fan-out to question followers (excluding the asker — they got the direct
+    // question_answered notification already, and the answerer themselves).
+    void (async () => {
+      try {
+        const followerIds = await FollowService.followerIdsOf(
+          FOLLOW_TARGET_TYPE.QUESTION,
+          input.questionId
+        );
+        for (const userId of followerIds) {
+          if (userId === input.authorId) continue;
+          if (userId === result.questionAuthorId) continue;
+          await NotificationService.notify({
+            userId,
+            type: NOTIF.FOLLOWED_QUESTION_ANSWERED,
+            payload: {
+              questionId: input.questionId,
+              answerId: result.answer.id,
+              fromUserId: input.authorId,
+            },
+          });
+        }
+      } catch (err) {
+        console.warn('[follow-fanout] answer create:', (err as Error).message);
+      }
+    })();
+
     return result.answer;
   }
 

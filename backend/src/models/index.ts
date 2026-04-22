@@ -7,6 +7,7 @@ import { PointRecord, initPointRecordModel } from './PointRecord';
 import { Report, initReportModel } from './Report';
 import { Comment, initCommentModel } from './Comment';
 import { Notification, initNotificationModel } from './Notification';
+import { Follow, initFollowModel } from './Follow';
 
 initUserModel(sequelize);
 initQuestionModel(sequelize);
@@ -16,6 +17,7 @@ initPointRecordModel(sequelize);
 initReportModel(sequelize);
 initCommentModel(sequelize);
 initNotificationModel(sequelize);
+initFollowModel(sequelize);
 
 User.hasMany(Question, { foreignKey: 'authorId', as: 'questions' });
 Question.belongsTo(User, { foreignKey: 'authorId', as: 'author' });
@@ -42,6 +44,9 @@ Comment.belongsTo(User, { foreignKey: 'authorId', as: 'author' });
 User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications' });
 Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+User.hasMany(Follow, { foreignKey: 'followerId', as: 'follows' });
+Follow.belongsTo(User, { foreignKey: 'followerId', as: 'follower' });
+
 export {
   sequelize,
   User,
@@ -52,4 +57,5 @@ export {
   Report,
   Comment,
   Notification,
+  Follow,
 };

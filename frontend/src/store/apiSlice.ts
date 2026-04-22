@@ -25,6 +25,9 @@ import type {
   LeaderboardUser,
   LeaderboardQuestion,
   LeaderboardRange,
+  FollowTargetType,
+  FollowedUserEntry,
+  FollowedQuestionEntry,
 } from '@/types/models';
 
 const rawBaseQuery = fetchBaseQuery({
@@ -69,6 +72,7 @@ export const apiSlice = createApi({
     'Notifications',
     'AdminStats',
     'Leaderboard',
+    'Follows',
   ],
   endpoints: (build) => ({
     register: build.mutation<AuthResult, { username: string; email: string; password: string }>({
@@ -320,6 +324,37 @@ export const apiSlice = createApi({
       invalidatesTags: ['Notifications'],
     }),
 
+    toggleFollow: build.mutation<
+      { following: boolean },
+      { targetType: FollowTargetType; targetId: number; questionId?: number }
+    >({
+      query: ({ targetType, targetId }) => ({
+        url: '/follows',
+        method: 'POST',
+        body: { targetType, targetId },
+      }),
+      transformResponse: (r: ApiOk<{ following: boolean }>) => unwrap(r),
+      invalidatesTags: (_res, _err, { targetType, questionId }) => {
+        const tags: { type: 'Follows' | 'Question'; id: string | number }[] = [
+          { type: 'Follows', id: targetType },
+        ];
+        if (questionId !== undefined) tags.push({ type: 'Question', id: questionId });
+        return tags;
+      },
+    }),
+
+    listMyFollowedUsers: build.query<FollowedUserEntry[], void>({
+      query: () => '/follows/me?targetType=user',
+      transformResponse: (r: ApiOk<FollowedUserEntry[]>) => unwrap(r),
+      providesTags: [{ type: 'Follows', id: 'user' }],
+    }),
+
+    listMyFollowedQuestions: build.query<FollowedQuestionEntry[], void>({
+      query: () => '/follows/me?targetType=question',
+      transformResponse: (r: ApiOk<FollowedQuestionEntry[]>) => unwrap(r),
+      providesTags: [{ type: 'Follows', id: 'question' }],
+    }),
+
     getUserLeaderboard: build.query<LeaderboardUser[], { limit?: number } | void>({
       query: (arg) => {
         const limit = arg && 'limit' in arg && arg.limit ? arg.limit : 20;
@@ -398,4 +433,7 @@ export const {
   useGetAdminStatsQuery,
   useGetUserLeaderboardQuery,
   useGetQuestionLeaderboardQuery,
+  useToggleFollowMutation,
+  useListMyFollowedUsersQuery,
+  useListMyFollowedQuestionsQuery,
 } = apiSlice;

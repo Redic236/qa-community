@@ -72,6 +72,8 @@ export interface AnswerWithComments extends Answer {
 export interface QuestionDetail extends Question {
   answers: AnswerWithComments[];
   comments?: Comment[];
+  followingQuestion?: boolean;
+  followingAuthor?: boolean;
 }
 
 export type NotificationType =
@@ -79,7 +81,29 @@ export type NotificationType =
   | 'answer_accepted'
   | 'question_liked'
   | 'answer_liked'
-  | 'content_removed';
+  | 'content_removed'
+  | 'followed_question_answered'
+  | 'followed_user_posted';
+
+export type FollowTargetType = 'user' | 'question';
+
+export interface FollowedUserEntry {
+  id: number;
+  username: string;
+  avatar: string | null;
+  points: number;
+}
+
+export interface FollowedQuestionEntry {
+  id: number;
+  title: string;
+  tags: string[];
+  votes: number;
+  answersCount: number;
+  isSolved: boolean;
+  authorId: number;
+  createdAt: string;
+}
 
 export interface AppNotification {
   id: number;

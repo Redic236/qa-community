@@ -25,6 +25,7 @@
   "reportNotFound": "Report not found",
   "reportAlreadyHandled": "Report already handled",
   "cannotReportOwn": "Cannot report your own content",
+  "cannotFollowSelf": "You cannot follow yourself",
   "alreadyReported": "You have already reported this content; it is pending review",
   "targetNotFound": "{{targetType}} not found",
   "bannedWord": "Content contains banned word \"{{word}}\" (field: {{field}})",

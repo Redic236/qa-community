@@ -20,7 +20,10 @@ test.describe('Profile', () => {
     // Username appears in multiple places on /profile; scope to the profile heading
     await expect(page.getByRole('heading', { name: user.username })).toBeVisible();
     await expect(page.getByText('当前积分')).toBeVisible();
-    await expect(page.locator('.ant-empty')).toBeVisible();
+    // Profile page has multiple empty states now (points history + followed
+    // questions/users tabs). Scoping to `.first()` is the least brittle way
+    // to assert "at least one empty state is showing" for a fresh account.
+    await expect(page.locator('.ant-empty').first()).toBeVisible();
   });
 
   test('point history reflects actions (ask -5)', async ({ page }) => {

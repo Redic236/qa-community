@@ -1,5 +1,7 @@
 import { Op, type WhereOptions } from 'sequelize';
 import { QuestionService } from '../services/QuestionService';
+import { FollowService } from '../services/FollowService';
+import { FOLLOW_TARGET_TYPE } from '../models/Follow';
 import { Question, Answer, Vote, Comment } from '../models';
 import { VOTE_TARGET_TYPE } from '../models/Vote';
 import { ROLES } from '../utils/constants';
@@ -137,7 +139,10 @@ export const getById = asyncHandler(async (req, res) => {
   if (!base) throw new NotFoundError('Question not found', 'questionNotFound');
 
   if (!req.userId) {
-    res.json({ success: true, data: base });
+    res.json({
+      success: true,
+      data: { ...base, followingQuestion: false, followingAuthor: false },
+    });
     return;
   }
 
@@ -151,9 +156,15 @@ export const getById = asyncHandler(async (req, res) => {
       targetId: { [Op.in]: answerIds },
     });
   }
-  const votes = await Vote.findAll({
-    where: { userId: req.userId, [Op.or]: orConditions },
-  });
+
+  // Parallelize votes lookup + the two follow lookups — each touches a
+  // different index, no reason to serialize.
+  const authorId = (base as unknown as { authorId: number }).authorId;
+  const [votes, followedQuestions, followedUsers] = await Promise.all([
+    Vote.findAll({ where: { userId: req.userId, [Op.or]: orConditions } }),
+    FollowService.whichAreFollowed(req.userId, FOLLOW_TARGET_TYPE.QUESTION, [id]),
+    FollowService.whichAreFollowed(req.userId, FOLLOW_TARGET_TYPE.USER, [authorId]),
+  ]);
 
   let likedQuestion = false;
   const likedAnswerIds = new Set<number>();
@@ -167,6 +178,8 @@ export const getById = asyncHandler(async (req, res) => {
     data: {
       ...base,
       liked: likedQuestion,
+      followingQuestion: followedQuestions.has(id),
+      followingAuthor: followedUsers.has(authorId),
       answers: base.answers.map((a) => ({ ...a, liked: likedAnswerIds.has(a.id) })),
     },
   });
