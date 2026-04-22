@@ -6,6 +6,9 @@ build/
 .vite/
 .turbo/
 
+# TypeScript incremental build cache — local churn, shouldn't be tracked
+*.tsbuildinfo
+
 # Logs
 *.log
 npm-debug.log*
