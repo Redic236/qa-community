@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import {
   Layout as AntLayout,
   Menu,
@@ -7,6 +8,7 @@ import {
   Dropdown,
   Typography,
   Grid,
+  Spin,
 } from 'antd';
 import {
   UserOutlined,
@@ -25,6 +27,8 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import NotificationsBell from './NotificationsBell';
 import LevelBadge from './LevelBadge';
 import LanguageSwitcher from './LanguageSwitcher';
+import ScrollToTop from './ScrollToTop';
+import ErrorBoundary from './ErrorBoundary';
 
 const { Header, Content } = AntLayout;
 
@@ -183,7 +187,21 @@ export default function Layout() {
           width: '100%',
         }}
       >
-        <Outlet />
+        <ScrollToTop />
+        <ErrorBoundary
+          title={t('errors.unexpected')}
+          resetLabel={t('common.back')}
+        >
+          <Suspense
+            fallback={
+              <div style={{ padding: 64, textAlign: 'center' }}>
+                <Spin size="large" tip={t('common.loading')} />
+              </div>
+            }
+          >
+            <Outlet />
+          </Suspense>
+        </ErrorBoundary>
       </Content>
     </AntLayout>
   );

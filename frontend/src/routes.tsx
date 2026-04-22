@@ -1,18 +1,24 @@
+import { lazy } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminRoute from '@/components/AdminRoute';
+// Eagerly load HomePage — it's the default landing and we want zero waterfall
+// for the most common entry point.
 import HomePage from '@/pages/HomePage';
-import LoginPage from '@/pages/LoginPage';
-import RegisterPage from '@/pages/RegisterPage';
-import QuestionDetailPage from '@/pages/QuestionDetailPage';
-import AskQuestionPage from '@/pages/AskQuestionPage';
-import ProfilePage from '@/pages/ProfilePage';
-import AdminReportsPage from '@/pages/AdminReportsPage';
-import AdminDashboardPage from '@/pages/AdminDashboardPage';
-import LeaderboardPage from '@/pages/LeaderboardPage';
-import AchievementsPage from '@/pages/AchievementsPage';
-import NotFoundPage from '@/pages/NotFoundPage';
+
+// Secondary pages are lazy so the initial bundle only ships the home path.
+// Admin pages (heavy recharts) are kept in their own chunks via manualChunks.
+const LoginPage = lazy(() => import('@/pages/LoginPage'));
+const RegisterPage = lazy(() => import('@/pages/RegisterPage'));
+const QuestionDetailPage = lazy(() => import('@/pages/QuestionDetailPage'));
+const AskQuestionPage = lazy(() => import('@/pages/AskQuestionPage'));
+const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
+const LeaderboardPage = lazy(() => import('@/pages/LeaderboardPage'));
+const AchievementsPage = lazy(() => import('@/pages/AchievementsPage'));
+const AdminReportsPage = lazy(() => import('@/pages/AdminReportsPage'));
+const AdminDashboardPage = lazy(() => import('@/pages/AdminDashboardPage'));
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 
 export const router = createBrowserRouter([
   {

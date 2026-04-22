@@ -15,4 +15,27 @@ export default defineConfig({
             },
         },
     },
+    build: {
+        // Split vendor bundles so:
+        //   - first visit: user downloads react / antd / redux / i18n chunks
+        //     in parallel → faster than one giant 1.8MB blob
+        //   - repeat visits: app code changes don't invalidate the 3rd-party
+        //     chunks → browser cache hit on everything in node_modules
+        //   - recharts only loads when admin hits the dashboard (lazy route below)
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+                    'antd-vendor': ['antd', '@ant-design/icons'],
+                    'charts-vendor': ['recharts'],
+                    'redux-vendor': ['@reduxjs/toolkit', 'react-redux'],
+                    'form-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
+                    'i18n-vendor': ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
+                },
+            },
+        },
+        // Bump the warning limit — per-chunk is what matters now, and the vendor
+        // chunks are intentionally in the 300-500 KB range.
+        chunkSizeWarningLimit: 600,
+    },
 });
