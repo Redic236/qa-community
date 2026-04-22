@@ -11,6 +11,7 @@ import adminRouter from './admin';
 import leaderboardRouter from './leaderboard';
 import followsRouter from './follows';
 import achievementsRouter from './achievements';
+import uploadsRouter from './uploads';
 
 const router = Router();
 
@@ -26,5 +27,6 @@ router.use('/admin', adminRouter);
 router.use('/leaderboard', leaderboardRouter);
 router.use('/follows', followsRouter);
 router.use('/achievements', achievementsRouter);
+router.use('/uploads', uploadsRouter);
 
 export default router;

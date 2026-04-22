@@ -141,6 +141,17 @@
     "unlikeAnswer": "Unlike answer {{id}}",
     "selfHint": "Can't like your own content"
   },
+  "markdown": {
+    "write": "Write",
+    "preview": "Preview",
+    "emptyPreview": "Nothing to preview yet",
+    "supportHint": "Markdown supported: **bold** *italic* `code` [link](url) ```lang code```",
+    "insertImage": "Insert image",
+    "uploading": "Uploading…",
+    "uploadFailed": "Upload failed",
+    "uploadTooLarge": "Image too large (5MB max)",
+    "uploadBadType": "Only png / jpg / gif / webp"
+  },
   "comment": {
     "addComment": "Add comment",
     "reply": "Reply",
@@ -165,13 +176,14 @@
     "editProfile": "Edit profile",
     "saved": "Profile updated",
     "modalTitle": "Edit profile",
-    "avatarLabel": "Avatar URL",
-    "avatarHint": "Leave blank for default",
-    "avatarPlaceholder": "https://...",
+    "avatarLabel": "Avatar",
+    "avatarHint": "Upload an image or paste an http(s) link",
+    "avatarPlaceholder": "Upload a file or paste https://...",
+    "avatarUpload": "Upload image",
     "passwordSection": "Change password (optional)",
     "newPasswordHint": "At least 6 chars; blank to keep current",
     "errors": {
-      "avatarMustBeUrl": "Avatar must be an http(s) link",
+      "avatarMustBeUrl": "Avatar must be an http(s) link or uploaded image",
       "newPasswordMin": "New password must be at least 6 characters",
       "currentPasswordRequired": "Changing password requires the current one"
     },

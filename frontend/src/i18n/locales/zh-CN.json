@@ -141,6 +141,17 @@
     "unlikeAnswer": "取消点赞回答 {{id}}",
     "selfHint": "不能给自己点赞"
   },
+  "markdown": {
+    "write": "编辑",
+    "preview": "预览",
+    "emptyPreview": "还没有内容可以预览",
+    "supportHint": "支持 Markdown：**粗体** *斜体* `代码` [链接](url) ```语言 代码```",
+    "insertImage": "插入图片",
+    "uploading": "上传中…",
+    "uploadFailed": "上传失败",
+    "uploadTooLarge": "图片太大（上限 5MB）",
+    "uploadBadType": "只支持 png / jpg / gif / webp"
+  },
   "comment": {
     "addComment": "添加评论",
     "reply": "回应",
@@ -165,13 +176,14 @@
     "editProfile": "编辑资料",
     "saved": "资料已更新",
     "modalTitle": "编辑个人资料",
-    "avatarLabel": "头像 URL",
-    "avatarHint": "留空表示使用默认头像",
-    "avatarPlaceholder": "https://...",
+    "avatarLabel": "头像",
+    "avatarHint": "可以上传图片或填写 http(s) 链接",
+    "avatarPlaceholder": "上传图片，或粘贴 https://... 链接",
+    "avatarUpload": "上传图片",
     "passwordSection": "修改密码（可选）",
     "newPasswordHint": "至少 6 位；留空则不修改",
     "errors": {
-      "avatarMustBeUrl": "头像必须是 http(s) 链接",
+      "avatarMustBeUrl": "头像必须是 http(s) 链接或上传的图片",
       "newPasswordMin": "新密码至少 6 位",
       "currentPasswordRequired": "修改密码需要填写当前密码"
     },

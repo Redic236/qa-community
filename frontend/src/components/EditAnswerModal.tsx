@@ -2,10 +2,12 @@ import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Modal, Form, Input, Alert, message } from 'antd';
+import { Modal, Form, Alert, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useUpdateAnswerMutation } from '@/store/apiSlice';
 import { getApiErrorMessage } from '@/utils/errors';
+import MarkdownEditor from '@/components/MarkdownEditor';
+import { uploadImage } from '@/utils/upload';
 import type { Answer } from '@/types/models';
 
 const schema = z.object({
@@ -73,7 +75,15 @@ export default function EditAnswerModal({ open, answer, questionId, onClose }: P
           <Controller
             name="content"
             control={control}
-            render={({ field }) => <Input.TextArea {...field} rows={6} />}
+            render={({ field }) => (
+              <MarkdownEditor
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                rows={8}
+                onUploadImage={uploadImage}
+              />
+            )}
           />
         </Form.Item>
       </Form>

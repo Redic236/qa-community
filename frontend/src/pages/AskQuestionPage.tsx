@@ -9,6 +9,8 @@ import { useCreateQuestionMutation } from '@/store/apiSlice';
 import { getApiErrorMessage } from '@/utils/errors';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useUnsavedChangesWarning } from '@/hooks/useUnsavedChangesWarning';
+import MarkdownEditor from '@/components/MarkdownEditor';
+import { uploadImage } from '@/utils/upload';
 
 const schema = z.object({
   title: z
@@ -110,10 +112,13 @@ export default function AskQuestionPage() {
               name="content"
               control={control}
               render={({ field }) => (
-                <Input.TextArea
-                  {...field}
-                  rows={8}
+                <MarkdownEditor
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  rows={10}
                   placeholder={t('question.contentPlaceholder')}
+                  onUploadImage={uploadImage}
                 />
               )}
             />

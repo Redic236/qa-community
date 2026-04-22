@@ -14,7 +14,6 @@ import {
   Divider,
   List,
   Form,
-  Input,
   message,
   Popconfirm,
   Skeleton,
@@ -50,6 +49,9 @@ import ReportButton from '@/components/ReportButton';
 import FollowButton from '@/components/FollowButton';
 import CommentSection from '@/components/CommentSection';
 import TimeAgo from '@/components/TimeAgo';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
+import MarkdownEditor from '@/components/MarkdownEditor';
+import { uploadImage } from '@/utils/upload';
 import type { Answer } from '@/types/models';
 
 const answerSchema = z.object({
@@ -279,11 +281,7 @@ export default function QuestionDetailPage() {
               </Typography.Text>
               <TimeAgo iso={data.createdAt} style={{ fontSize: 12 }} />
             </Space>
-            <Typography.Paragraph
-              style={{ whiteSpace: 'pre-wrap', marginBottom: 0, wordBreak: 'break-word' }}
-            >
-              {data.content}
-            </Typography.Paragraph>
+            <MarkdownRenderer content={data.content} />
             <CommentSection
               targetType="question"
               targetId={data.id}
@@ -355,15 +353,9 @@ export default function QuestionDetailPage() {
                         )}
                       </Space>
                     )}
-                    <Typography.Paragraph
-                      style={{
-                        whiteSpace: 'pre-wrap',
-                        marginBottom: 8,
-                        wordBreak: 'break-word',
-                      }}
-                    >
-                      {a.content}
-                    </Typography.Paragraph>
+                    <div style={{ marginBottom: 8 }}>
+                      <MarkdownRenderer content={a.content} />
+                    </div>
                     <Space wrap>
                       <TimeAgo iso={a.createdAt} style={{ fontSize: 12 }} />
                       {isAuthor && !a.isAccepted && (
@@ -476,10 +468,13 @@ export default function QuestionDetailPage() {
                     name="content"
                     control={control}
                     render={({ field }) => (
-                      <Input.TextArea
-                        {...field}
-                        rows={5}
+                      <MarkdownEditor
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        rows={6}
                         placeholder={t('answer.placeholder')}
+                        onUploadImage={uploadImage}
                       />
                     )}
                   />

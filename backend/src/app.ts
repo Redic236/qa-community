@@ -8,6 +8,8 @@ import apiRouter from './routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { initI18n, i18next, i18nextMiddleware } from './i18n';
 import { NotificationStream, type PubSubAdapter } from './services/NotificationStream';
+import { getUploadDir } from './services/UploadService';
+import { UPLOAD_URL_PREFIX } from './utils/constants';
 
 export const app = express();
 
@@ -65,6 +67,17 @@ if (redis) {
 app.get('/health', (_req, res) => {
   res.json({ ok: true });
 });
+
+// Serve uploaded blobs from the same origin as the API. immutable + 1y cache
+// because filenames are UUIDs — there's no overwrite case.
+app.use(
+  UPLOAD_URL_PREFIX,
+  express.static(getUploadDir(), {
+    maxAge: '1y',
+    immutable: true,
+    fallthrough: false,
+  })
+);
 
 app.use('/api', apiRouter);
 

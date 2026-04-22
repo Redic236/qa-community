@@ -73,6 +73,12 @@ services:
       RATE_LIMIT_FORCE: "1"
       DAILY_PASSIVE_POINTS_CAP: ${DAILY_PASSIVE_POINTS_CAP:-200}
       BANNED_WORDS: ${BANNED_WORDS:-}
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      # User-uploaded images survive container rebuilds via a named volume.
+      # Without this, every `docker compose up --build` wipes the uploads dir
+      # and every previously-posted image in markdown would 404.
+      - uploads_data:/app/uploads
     healthcheck:
       test:
         [
@@ -99,6 +105,7 @@ services:
 volumes:
   mysql_data:
   redis_data:
+  uploads_data:
 
 networks:
   qa:

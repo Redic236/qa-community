@@ -84,3 +84,14 @@ export const NOTIFICATION_TYPES = {
 export type NotificationType =
   (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
 export const NOTIFICATION_TYPE_VALUES = Object.values(NOTIFICATION_TYPES) as NotificationType[];
+
+// Uploads
+export const UPLOAD_ALLOWED_MIME = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'] as const;
+export type UploadMime = (typeof UPLOAD_ALLOWED_MIME)[number];
+export const UPLOAD_MAX_BYTES = 5 * 1024 * 1024; // 5 MB — caps per-file size
+
+/**
+ * Public URL prefix served by Express static. Using `/uploads` keeps it
+ * subdomain-agnostic so the nginx reverse-proxy config doesn't need changes.
+ */
+export const UPLOAD_URL_PREFIX = '/uploads';

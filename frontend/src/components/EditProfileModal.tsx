@@ -1,11 +1,25 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Modal, Form, Input, Alert, Divider, message, Typography } from 'antd';
+import {
+  Modal,
+  Form,
+  Input,
+  Alert,
+  Divider,
+  message,
+  Typography,
+  Upload,
+  Avatar,
+  Space,
+  Button,
+} from 'antd';
+import { UploadOutlined, UserOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useUpdateProfileMutation } from '@/store/apiSlice';
 import { getApiErrorMessage } from '@/utils/errors';
+import { uploadImage } from '@/utils/upload';
 import type { User } from '@/types/models';
 
 const schema = z
@@ -16,8 +30,8 @@ const schema = z
       .max(50, 'auth.errors.usernameMax'),
     avatar: z
       .string()
-      .max(255)
-      .refine((v) => v === '' || /^https?:\/\/.+/i.test(v), {
+      .max(500)
+      .refine((v) => v === '' || /^(https?:\/\/|\/uploads\/).+/i.test(v), {
         message: 'profile.errors.avatarMustBeUrl',
       }),
     currentPassword: z.string().optional(),
@@ -41,11 +55,14 @@ interface Props {
 export default function EditProfileModal({ open, user, onClose }: Props) {
   const [updateProfile, { isLoading, error }] = useUpdateProfileMutation();
   const { t } = useTranslation();
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const {
     control,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors, isDirty },
   } = useForm<Values>({
     resolver: zodResolver(schema),
@@ -131,11 +148,54 @@ export default function EditProfileModal({ open, user, onClose }: Props) {
               : t('profile.avatarHint')
           }
         >
+          <Space align="center" size="middle" wrap>
+            <Avatar
+              size={56}
+              src={watch('avatar') || undefined}
+              icon={<UserOutlined />}
+            />
+            <Space size="small">
+              <Upload
+                accept="image/*"
+                showUploadList={false}
+                disabled={uploadingAvatar}
+                beforeUpload={async (file) => {
+                  setUploadingAvatar(true);
+                  try {
+                    const url = await uploadImage(file);
+                    setValue('avatar', url, { shouldDirty: true, shouldValidate: true });
+                  } catch (err) {
+                    message.error((err as Error).message);
+                  } finally {
+                    setUploadingAvatar(false);
+                  }
+                  return false;
+                }}
+              >
+                <Button icon={<UploadOutlined />} loading={uploadingAvatar}>
+                  {t('profile.avatarUpload')}
+                </Button>
+              </Upload>
+              {watch('avatar') && (
+                <Button
+                  icon={<DeleteOutlined />}
+                  onClick={() => setValue('avatar', '', { shouldDirty: true })}
+                  danger
+                >
+                  {t('common.clear')}
+                </Button>
+              )}
+            </Space>
+          </Space>
           <Controller
             name="avatar"
             control={control}
             render={({ field }) => (
-              <Input {...field} placeholder={t('profile.avatarPlaceholder')} />
+              <Input
+                {...field}
+                placeholder={t('profile.avatarPlaceholder')}
+                style={{ marginTop: 8 }}
+              />
             )}
           />
         </Form.Item>

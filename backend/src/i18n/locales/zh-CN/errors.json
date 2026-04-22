@@ -31,5 +31,11 @@
   "bannedWord": "内容包含违禁词 \"{{word}}\"（字段: {{field}}）",
   "validationFailed": "校验失败",
   "routeNotFound": "路由不存在",
-  "internalServer": "服务器内部错误"
+  "internalServer": "服务器内部错误",
+  "upload": {
+    "missingFile": "请选择要上传的文件",
+    "tooLarge": "文件太大（上限 5MB）",
+    "badType": "仅支持 png / jpg / gif / webp 格式",
+    "badRequest": "上传请求无效"
+  }
 }

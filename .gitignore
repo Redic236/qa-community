@@ -34,5 +34,9 @@ test-results/
 mysql_data/
 redis_data/
 
+# Runtime user uploads — written by the server, never tracked
+backend/uploads/
+uploads/
+
 # Local scratch for GitHub Release note drafts — not shipped
 .release-notes/

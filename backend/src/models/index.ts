@@ -9,6 +9,7 @@ import { Comment, initCommentModel } from './Comment';
 import { Notification, initNotificationModel } from './Notification';
 import { Follow, initFollowModel } from './Follow';
 import { UserAchievement, initUserAchievementModel } from './UserAchievement';
+import { Upload, initUploadModel } from './Upload';
 
 initUserModel(sequelize);
 initQuestionModel(sequelize);
@@ -20,6 +21,7 @@ initCommentModel(sequelize);
 initNotificationModel(sequelize);
 initFollowModel(sequelize);
 initUserAchievementModel(sequelize);
+initUploadModel(sequelize);
 
 User.hasMany(Question, { foreignKey: 'authorId', as: 'questions' });
 Question.belongsTo(User, { foreignKey: 'authorId', as: 'author' });
@@ -52,6 +54,9 @@ Follow.belongsTo(User, { foreignKey: 'followerId', as: 'follower' });
 User.hasMany(UserAchievement, { foreignKey: 'userId', as: 'achievements' });
 UserAchievement.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+User.hasMany(Upload, { foreignKey: 'uploaderId', as: 'uploads' });
+Upload.belongsTo(User, { foreignKey: 'uploaderId', as: 'uploader' });
+
 export {
   sequelize,
   User,
@@ -64,4 +69,5 @@ export {
   Notification,
   Follow,
   UserAchievement,
+  Upload,
 };

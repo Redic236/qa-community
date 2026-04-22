@@ -6,6 +6,8 @@ import { Modal, Form, Input, Tag, Space, Alert, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useUpdateQuestionMutation } from '@/store/apiSlice';
 import { getApiErrorMessage } from '@/utils/errors';
+import MarkdownEditor from '@/components/MarkdownEditor';
+import { uploadImage } from '@/utils/upload';
 import type { Question } from '@/types/models';
 
 const schema = z.object({
@@ -113,7 +115,15 @@ export default function EditQuestionModal({ open, question, onClose }: Props) {
           <Controller
             name="content"
             control={control}
-            render={({ field }) => <Input.TextArea {...field} rows={6} />}
+            render={({ field }) => (
+              <MarkdownEditor
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                rows={8}
+                onUploadImage={uploadImage}
+              />
+            )}
           />
         </Form.Item>
         <Form.Item

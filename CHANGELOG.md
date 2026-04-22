@@ -2,6 +2,48 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/) · 版本号遵循 [SemVer](https://semver.org/)
 
+## [1.2.0] — 2026-04-22
+
+富文本 + 代码高亮 + 图片上传。问答内容从纯文本升级为 Markdown，头像不再只能填 URL。
+新增 1 条 migration（uploads 表）；`docker-compose.yml` 新增一个命名卷。
+
+### 新增（Added）
+
+- **Markdown 渲染**：`react-markdown` + `remark-gfm`（支持表格 / 任务列表 / 自动链接 / 删除线）。问题正文、回答正文自动渲染。已有纯文本内容零改动兼容——纯文本即合法 markdown
+- **代码高亮**：`react-syntax-highlighter` PrismLight + OneLight/OneDark 主题，跟随应用暗色模式；显式注册 18 门常用语言（JS/TS/JSX/TSX/Python/Go/Rust/C/C++/C#/Java/SQL/Bash/JSON/YAML/CSS/Markdown/GraphQL），避免 Prism 全量打包
+- **Markdown 编辑器**：Write / Preview 双 tab，内联预览；支持粘贴图片 / 拖入图片 / "插入图片"按钮三种上传入口；作为底层在 AskQuestionPage / EditQuestionModal / QuestionDetailPage（回答表单）/ EditAnswerModal 四处替换原 `<Input.TextArea>`
+- **图片上传接口**：`POST /api/uploads/image`（登录 + 限流 + multer memory storage + UUID 重命名 + MIME 白名单 + 5MB 上限）。新增 `uploads` 表记录 owner / mime / size，Express static 在 `/uploads/*` 提供公开访问
+- **头像上传**：EditProfileModal 从"仅支持 URL"升级为上传按钮 + 头像预览 + 清除按钮；同时保留 URL 输入框（老用户习惯）。后端 `updateProfileSchema.avatar` 兼容接收 `/uploads/...` 相对路径
+
+### 基础设施
+
+- `docker-compose.yml` 新增 `uploads_data` 命名卷挂到 `/app/uploads`，容器重建不丢图片
+- `nginx.conf` 新增 `/uploads/` 反代 + 把 `/api/` 的 `client_max_body_size` 从默认 1MB 提升到 6MB（覆盖 5MB 图片 cap）
+
+### Migration
+
+```
+20260422000006-uploads.ts  # CREATE TABLE uploads + uploader_id / created_at 索引
+```
+
+### 测试
+
+- 后端 Jest：+ 6 个上传断点测试（154 用例全绿）
+  - 未登录 → 401
+  - 缺 file 字段 → 400
+  - 非图片 MIME → 415
+  - 超过 5MB → 413（multer 层捕获）
+  - 成功 → 201 + DB 行写入 + 文件落盘 + UUID 文件名不冲突
+- 前端 tsc + vite build 通过；E2E 20/20 通过
+
+### 已知限制
+
+- 上传存储是单机磁盘。多实例部署需要：或者把 uploads volume 挂共享文件系统（NFS / GlusterFS），或者改 UploadService 去接 S3 兼容 API
+- 没有 GC：删除问题 / 回答时不清理 markdown 里引用的图片（孤儿文件）。可作 v1.3.x 周期任务
+- 没有 EXIF 剥离：上传图片可能带相机 GPS / 序列号等元数据。若上线到公开社区建议加 `sharp().rotate().toBuffer()` 做一次 re-encode
+
+---
+
 ## [1.1.1] — 2026-04-22
 
 收尾 v1.0.0 代码审查里剩余的 3 项 UX / 暗色模式 polish。纯前端改动，无 API / DB 变更。

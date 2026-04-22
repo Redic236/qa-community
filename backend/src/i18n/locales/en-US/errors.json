@@ -31,5 +31,11 @@
   "bannedWord": "Content contains banned word \"{{word}}\" (field: {{field}})",
   "validationFailed": "Validation failed",
   "routeNotFound": "Route not found",
-  "internalServer": "Internal server error"
+  "internalServer": "Internal server error",
+  "upload": {
+    "missingFile": "Please select a file to upload",
+    "tooLarge": "File too large (5MB max)",
+    "badType": "Only png / jpg / gif / webp supported",
+    "badRequest": "Invalid upload request"
+  }
 }
