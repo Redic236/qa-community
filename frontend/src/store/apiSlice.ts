@@ -130,12 +130,19 @@ export const apiSlice = createApi({
         limit: r.meta?.limit ?? r.data.length,
       }),
       providesTags: ['QuestionList'],
+      // Home → detail → back to home is a common round-trip; default 60s
+      // evicted the list mid-browse. Mutations still invalidate via tags,
+      // so staleness remains bounded by actual writes.
+      keepUnusedDataFor: 300,
     }),
 
     getQuestion: build.query<QuestionDetail, number>({
       query: (id) => `/questions/${id}`,
       transformResponse: (r: ApiOk<QuestionDetail>) => unwrap(r),
       providesTags: (_res, _err, id) => [{ type: 'Question', id }],
+      // Long enough to survive a short detour (scroll a list, come back),
+      // short enough that a refresh after a long absence fetches fresh.
+      keepUnusedDataFor: 120,
     }),
 
     createQuestion: build.mutation<
@@ -403,6 +410,29 @@ export const apiSlice = createApi({
         body: { targetType, targetId },
       }),
       transformResponse: (r: ApiOk<{ following: boolean }>) => unwrap(r),
+      // Optimistic: flip the button state on the detail cache immediately.
+      // The followed-list caches stay invalidation-driven since we don't
+      // have the full row data to inject optimistically.
+      async onQueryStarted(
+        { targetType, targetId, questionId },
+        { dispatch, queryFulfilled }
+      ) {
+        if (questionId === undefined) return; // no cache to patch
+        const patch = dispatch(
+          apiSlice.util.updateQueryData('getQuestion', questionId, (draft) => {
+            if (targetType === 'question') {
+              draft.followingQuestion = !(draft.followingQuestion === true);
+            } else if (targetType === 'user' && draft.authorId === targetId) {
+              draft.followingAuthor = !(draft.followingAuthor === true);
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patch.undo();
+        }
+      },
       invalidatesTags: (_res, _err, { targetType, questionId }) => {
         const tags: { type: 'Follows' | 'Question'; id: string | number }[] = [
           { type: 'Follows', id: targetType },
@@ -437,6 +467,9 @@ export const apiSlice = createApi({
       },
       transformResponse: (r: ApiOk<LeaderboardUser[]>) => unwrap(r),
       providesTags: [{ type: 'Leaderboard', id: 'users' }],
+      // Leaderboards don't change minute-to-minute; 5-min cache keeps the
+      // Home ↔ Leaderboard ↔ Detail round-trip instant.
+      keepUnusedDataFor: 300,
     }),
     getQuestionLeaderboard: build.query<
       LeaderboardQuestion[],
@@ -451,6 +484,7 @@ export const apiSlice = createApi({
       providesTags: (_res, _err, arg) => [
         { type: 'Leaderboard', id: `questions-${(arg && 'range' in arg && arg.range) || 'all'}` },
       ],
+      keepUnusedDataFor: 300,
     }),
 
     getAdminStats: build.query<AdminStats, { days?: 7 | 30 | 90 } | void>({
