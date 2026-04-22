@@ -20,6 +20,8 @@
   "onlyAnswerAuthorOrAdminDelete": "Only the answer author or an admin can delete",
   "commentNotFound": "Comment not found",
   "onlyCommentAuthorOrAdminDelete": "Only the comment author or an admin can delete",
+  "commentReplyTargetMismatch": "Reply must belong to the same thread as its parent",
+  "commentReplyTooDeep": "Replies can only be one level deep",
   "reportNotFound": "Report not found",
   "reportAlreadyHandled": "Report already handled",
   "cannotReportOwn": "Cannot report your own content",

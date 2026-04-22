@@ -5,12 +5,13 @@ import { asyncHandler } from '../middleware/asyncHandler';
 
 export const create = asyncHandler(async (req, res) => {
   if (!req.userId) throw new UnauthorizedError();
-  const { targetType, targetId, content } = req.body;
+  const { targetType, targetId, content, parentId } = req.body;
   const comment = await CommentService.create({
     authorId: req.userId,
     targetType,
     targetId,
     content,
+    parentId,
   });
   res.status(201).json({ success: true, data: comment });
 });

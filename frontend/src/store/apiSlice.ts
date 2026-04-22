@@ -266,12 +266,18 @@ export const apiSlice = createApi({
 
     createComment: build.mutation<
       Comment,
-      { targetType: VoteTargetType; targetId: number; content: string; questionId: number }
+      {
+        targetType: VoteTargetType;
+        targetId: number;
+        content: string;
+        questionId: number;
+        parentId?: number;
+      }
     >({
-      query: ({ targetType, targetId, content }) => ({
+      query: ({ targetType, targetId, content, parentId }) => ({
         url: '/comments',
         method: 'POST',
-        body: { targetType, targetId, content },
+        body: { targetType, targetId, content, parentId },
       }),
       transformResponse: (r: ApiOk<Comment>) => unwrap(r),
       invalidatesTags: (_res, _err, { questionId }) => [{ type: 'Question', id: questionId }],

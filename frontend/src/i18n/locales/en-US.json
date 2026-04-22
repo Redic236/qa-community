@@ -145,6 +145,7 @@
     "reply": "Reply",
     "publishButton": "Post",
     "placeholder": "Write your comment (2-500 chars)",
+    "replyPlaceholder": "Reply to this comment (2-500 chars)",
     "deleteConfirm": "Delete this comment?",
     "deleteAria": "Delete comment",
     "minWarning": "Comment must be at least 2 characters",

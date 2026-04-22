@@ -60,6 +60,8 @@ export interface Comment {
   targetType: VoteTargetType;
   targetId: number;
   authorId: number;
+  /** null for root comments; set when this row is a 1-deep reply. */
+  parentId: number | null;
   createdAt: string;
 }
 

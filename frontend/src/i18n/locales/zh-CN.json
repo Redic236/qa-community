@@ -145,6 +145,7 @@
     "reply": "回应",
     "publishButton": "发布",
     "placeholder": "写下你的评论（2-500 字符）",
+    "replyPlaceholder": "回复这条评论（2-500 字符）",
     "deleteConfirm": "删除这条评论？",
     "deleteAria": "删除评论",
     "minWarning": "评论至少 2 个字符",

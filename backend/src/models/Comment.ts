@@ -19,6 +19,8 @@ export class Comment extends Model<
   declare targetType: VoteTargetType;
   declare targetId: number;
   declare authorId: ForeignKey<User['id']>;
+  /** Nullable self-ref. Depth capped at 2 (root → direct reply) in the service. */
+  declare parentId: CreationOptional<number | null>;
   declare createdAt: CreationOptional<Date>;
 }
 
@@ -33,6 +35,7 @@ export const initCommentModel = (sequelize: Sequelize): void => {
       },
       targetId: { type: DataTypes.INTEGER, allowNull: false },
       authorId: { type: DataTypes.INTEGER, allowNull: false },
+      parentId: { type: DataTypes.INTEGER, allowNull: true },
       createdAt: DataTypes.DATE,
     },
     {
@@ -47,6 +50,7 @@ export const initCommentModel = (sequelize: Sequelize): void => {
           name: 'comments_target_created_idx',
         },
         { fields: ['author_id'], name: 'comments_author_idx' },
+        { fields: ['parent_id'], name: 'comments_parent_idx' },
       ],
     }
   );

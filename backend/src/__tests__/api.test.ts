@@ -984,6 +984,139 @@ describe('Reports + admin', () => {
   });
 });
 
+describe('Comments — threading (parent_id)', () => {
+  test('reply stores parentId pointing at the root', async () => {
+    const asker = await registerUser('thr_asker');
+    const c1 = await registerUser('thr_c1');
+    const c2 = await registerUser('thr_c2');
+    const q = await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${asker.token}`)
+      .send({ title: 'Thread root title here', content: 'Thread root content body.' });
+
+    const root = await request(app)
+      .post('/api/comments')
+      .set('Authorization', `Bearer ${c1.token}`)
+      .send({ targetType: 'question', targetId: q.body.data.id, content: '根评论 one' });
+    expect(root.status).toBe(201);
+    expect(root.body.data.parentId).toBeNull();
+
+    const reply = await request(app)
+      .post('/api/comments')
+      .set('Authorization', `Bearer ${c2.token}`)
+      .send({
+        targetType: 'question',
+        targetId: q.body.data.id,
+        content: '回复一下',
+        parentId: root.body.data.id,
+      });
+    expect(reply.status).toBe(201);
+    expect(reply.body.data.parentId).toBe(root.body.data.id);
+
+    const detail = await request(app).get(`/api/questions/${q.body.data.id}`);
+    expect(detail.body.data.comments).toHaveLength(2);
+    const ids = detail.body.data.comments.map((c: { id: number }) => c.id);
+    expect(ids).toContain(root.body.data.id);
+    expect(ids).toContain(reply.body.data.id);
+  });
+
+  test('cannot reply to a reply (depth capped at 2)', async () => {
+    const asker = await registerUser('deep_asker');
+    const c1 = await registerUser('deep_c1');
+    const c2 = await registerUser('deep_c2');
+    const q = await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${asker.token}`)
+      .send({ title: 'Depth guard title here', content: 'Depth guard content body.' });
+
+    const root = await request(app)
+      .post('/api/comments')
+      .set('Authorization', `Bearer ${c1.token}`)
+      .send({ targetType: 'question', targetId: q.body.data.id, content: 'root comment' });
+    const reply = await request(app)
+      .post('/api/comments')
+      .set('Authorization', `Bearer ${c2.token}`)
+      .send({
+        targetType: 'question',
+        targetId: q.body.data.id,
+        content: 'first reply',
+        parentId: root.body.data.id,
+      });
+    expect(reply.status).toBe(201);
+
+    const nested = await request(app)
+      .post('/api/comments')
+      .set('Authorization', `Bearer ${c1.token}`)
+      .send({
+        targetType: 'question',
+        targetId: q.body.data.id,
+        content: 'nested reply',
+        parentId: reply.body.data.id,
+      });
+    expect(nested.status).toBe(400);
+  });
+
+  test('reply must live on the same target', async () => {
+    const asker = await registerUser('mism_asker');
+    const c1 = await registerUser('mism_c1');
+    const q1 = await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${asker.token}`)
+      .send({ title: 'First question title', content: 'First question content body.' });
+    const q2 = await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${asker.token}`)
+      .send({ title: 'Second question title', content: 'Second question content body.' });
+
+    const rootOnQ1 = await request(app)
+      .post('/api/comments')
+      .set('Authorization', `Bearer ${c1.token}`)
+      .send({ targetType: 'question', targetId: q1.body.data.id, content: 'root on q1' });
+
+    const cross = await request(app)
+      .post('/api/comments')
+      .set('Authorization', `Bearer ${c1.token}`)
+      .send({
+        targetType: 'question',
+        targetId: q2.body.data.id,
+        content: 'attempting cross-target reply',
+        parentId: rootOnQ1.body.data.id,
+      });
+    expect(cross.status).toBe(400);
+  });
+
+  test('deleting root cascades to its replies', async () => {
+    const asker = await registerUser('casc_asker');
+    const c1 = await registerUser('casc_c1');
+    const c2 = await registerUser('casc_c2');
+    const q = await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${asker.token}`)
+      .send({ title: 'Cascade root title', content: 'Cascade root content body.' });
+    const root = await request(app)
+      .post('/api/comments')
+      .set('Authorization', `Bearer ${c1.token}`)
+      .send({ targetType: 'question', targetId: q.body.data.id, content: 'root to delete' });
+    await request(app)
+      .post('/api/comments')
+      .set('Authorization', `Bearer ${c2.token}`)
+      .send({
+        targetType: 'question',
+        targetId: q.body.data.id,
+        content: 'reply that should vanish',
+        parentId: root.body.data.id,
+      });
+
+    const del = await request(app)
+      .delete(`/api/comments/${root.body.data.id}`)
+      .set('Authorization', `Bearer ${c1.token}`);
+    expect(del.status).toBe(200);
+
+    const detail = await request(app).get(`/api/questions/${q.body.data.id}`);
+    expect(detail.body.data.comments).toHaveLength(0);
+  });
+});
+
 describe('Comments', () => {
   test('post comment on a question (auth required)', async () => {
     const asker = await registerUser('asker');

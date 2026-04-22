@@ -20,6 +20,8 @@
   "onlyAnswerAuthorOrAdminDelete": "只有回答作者或管理员可以删除",
   "commentNotFound": "评论不存在",
   "onlyCommentAuthorOrAdminDelete": "只有评论作者或管理员可以删除",
+  "commentReplyTargetMismatch": "回复必须在同一评论所属的内容下",
+  "commentReplyTooDeep": "最多只能回复一层，不能嵌套更深",
   "reportNotFound": "举报不存在",
   "reportAlreadyHandled": "该举报已处理",
   "cannotReportOwn": "不能举报自己的内容",
