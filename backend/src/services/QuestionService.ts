@@ -1,4 +1,4 @@
-import { Op, type Order, type WhereOptions } from 'sequelize';
+import { Op, literal, type Order, type WhereOptions } from 'sequelize';
 import { sequelize, Question, Answer, Vote } from '../models';
 import { VOTE_TARGET_TYPE } from '../models/Vote';
 import { PointsService } from './PointsService';
@@ -54,6 +54,58 @@ export interface UpdateQuestionInput {
   title?: string;
   content?: string;
   tags?: string[];
+}
+
+/**
+ * MySQL InnoDB default `ngram_token_size` is 2 — queries shorter than that
+ * can't match via FULLTEXT. Below this threshold we fall back to LIKE on all
+ * dialects so single-char needles keep working.
+ */
+const MIN_FT_TOKEN_LEN = 2;
+
+/**
+ * Strip MySQL BOOLEAN MODE operators so user input can't escape the match
+ * pattern. Also collapse whitespace so multi-word queries become ANDed terms.
+ */
+function sanitizeFtNeedle(raw: string): string {
+  // Operators: + - > < ( ) ~ * " @ and backslash itself.
+  return raw.replace(/[+\-><()~*"@\\]/g, ' ').trim();
+}
+
+/** Test hook — internal function exposed for unit coverage. Don't call in prod. */
+export { sanitizeFtNeedle as _forTest_sanitizeFtNeedle };
+
+function buildKeywordCondition(needle: string): WhereOptions {
+  const isMysql = sequelize.getDialect() === 'mysql';
+  const clean = sanitizeFtNeedle(needle);
+  const canUseFulltext = isMysql && clean.length >= MIN_FT_TOKEN_LEN;
+
+  if (canUseFulltext) {
+    // BOOLEAN MODE keeps results deterministic (no 50% quorum rule) and lets
+    // us force every token to appear. `+term*` = required prefix match — the
+    // ngram parser still respects the prefix.
+    const terms = clean
+      .split(' ')
+      .filter((w) => w.length >= MIN_FT_TOKEN_LEN)
+      .map((w) => `+${w}*`)
+      .join(' ');
+    if (terms.length > 0) {
+      const escaped = sequelize.escape(terms);
+      return literal(
+        `MATCH (title, content) AGAINST (${escaped} IN BOOLEAN MODE)`
+      ) as unknown as WhereOptions;
+    }
+    // Fall through to LIKE if sanitizing wiped everything.
+  }
+
+  // SQLite tests + MySQL-too-short fallback: case-insensitive substring on
+  // both fields. The JSON tags column is untouched.
+  return {
+    [Op.or]: [
+      { title: { [Op.substring]: needle } },
+      { content: { [Op.substring]: needle } },
+    ],
+  };
 }
 
 export class QuestionService {
@@ -127,14 +179,7 @@ export class QuestionService {
 
     const needle = input.q?.trim();
     if (needle) {
-      // Keyword search over title + content. LIKE is case-insensitive under
-      // MySQL utf8mb4_unicode_ci and SQLite ASCII LIKE.
-      conditions.push({
-        [Op.or]: [
-          { title: { [Op.substring]: needle } },
-          { content: { [Op.substring]: needle } },
-        ],
-      });
+      conditions.push(buildKeywordCondition(needle));
     }
 
     const where: WhereOptions =
