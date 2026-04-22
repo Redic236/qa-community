@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge, Button, Dropdown, List, Typography, Space, message } from 'antd';
+import { Badge, Button, Dropdown, List, Typography, Space, message, theme } from 'antd';
 import { BellOutlined, BellFilled } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -23,6 +23,10 @@ export default function NotificationsBell() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const { t } = useTranslation();
+  // Pull theme tokens so the dropdown follows light/dark instead of forcing
+  // a white card on a black layout (which flattens every text child into an
+  // invisible white-on-white mess).
+  const { token: tk } = theme.useToken();
 
   // Live updates via SSE invalidate the cache the moment the server fires a
   // notification. The 5-minute poll is a safety net for stream restarts /
@@ -66,9 +70,11 @@ export default function NotificationsBell() {
   const dropdown = (
     <div
       style={{
-        background: '#fff',
-        boxShadow: '0 6px 16px rgba(0,0,0,0.08)',
-        borderRadius: 8,
+        // Theme-aware surface: AntD's algorithm derives a dark grey for
+        // colorBgElevated under darkAlgorithm and white under defaultAlgorithm.
+        background: tk.colorBgElevated,
+        boxShadow: tk.boxShadowSecondary,
+        borderRadius: tk.borderRadiusLG,
         width: 360,
         maxHeight: 480,
         overflow: 'auto',
@@ -80,7 +86,7 @@ export default function NotificationsBell() {
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '8px 12px',
-          borderBottom: '1px solid #f0f0f0',
+          borderBottom: `1px solid ${tk.colorBorderSecondary}`,
         }}
       >
         <Typography.Text strong>{t('notification.title')}</Typography.Text>
@@ -101,7 +107,9 @@ export default function NotificationsBell() {
               onClick={() => onItemClick(n)}
               style={{
                 cursor: 'pointer',
-                background: n.read ? '#fff' : '#f0f7ff',
+                // Unread rows get a primary-tinted surface; colorPrimaryBg is
+                // light blue in light mode and a muted dark-blue under dark.
+                background: n.read ? tk.colorBgElevated : tk.colorPrimaryBg,
                 padding: '10px 12px',
               }}
             >

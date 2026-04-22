@@ -1,4 +1,4 @@
-import { Card, Skeleton, Space } from 'antd';
+import { Card, Skeleton, Space, theme } from 'antd';
 
 interface LoadingCardProps {
   rows?: number;
@@ -20,11 +20,12 @@ export function LoadingCard({ rows = 4, paragraph = true }: LoadingCardProps) {
  * skeletons reduce the jump when real data arrives.
  */
 function LoadingRow() {
+  const { token: tk } = theme.useToken();
   return (
     <div
       style={{
         padding: '16px 24px',
-        borderBottom: '1px solid #f0f0f0',
+        borderBottom: `1px solid ${tk.colorBorderSecondary}`,
       }}
     >
       <Skeleton.Input active size="small" style={{ width: '60%', height: 20, marginBottom: 8 }} />

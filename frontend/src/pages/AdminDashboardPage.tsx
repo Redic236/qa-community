@@ -11,6 +11,7 @@ import {
   Table,
   Tag,
   Typography,
+  theme,
 } from 'antd';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -52,6 +53,11 @@ export default function AdminDashboardPage() {
   usePageTitle(t('dashboard.title'));
   const [days, setDays] = useState<RangeDays>(30);
   const { data, isFetching, error } = useGetAdminStatsQuery({ days });
+  // Recharts only takes hex / rgba strings, so pull grid / axis tick colors
+  // from AntD tokens to match whichever mode is active.
+  const { token: tk } = theme.useToken();
+  const gridStroke = tk.colorBorderSecondary;
+  const tickFill = tk.colorTextSecondary;
 
   if (isFetching && !data) {
     return (
@@ -156,9 +162,9 @@ export default function AdminDashboardPage() {
         <div style={{ width: '100%', height: 320 }}>
           <ResponsiveContainer>
             <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 0, left: -16 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+              <XAxis dataKey="date" tick={{ fontSize: 12, fill: tickFill }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: tickFill }} />
               <Tooltip />
               <Legend />
               <Line
@@ -247,9 +253,9 @@ export default function AdminDashboardPage() {
                     layout="vertical"
                     margin={{ top: 0, right: 16, bottom: 0, left: 8 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
-                    <YAxis type="category" dataKey="tag" tick={{ fontSize: 12 }} width={80} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: tickFill }} />
+                    <YAxis type="category" dataKey="tag" tick={{ fontSize: 12, fill: tickFill }} width={80} />
                     <Tooltip />
                     <Bar
                       dataKey="count"

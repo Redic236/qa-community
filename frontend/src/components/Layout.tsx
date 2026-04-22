@@ -9,6 +9,7 @@ import {
   Typography,
   Grid,
   Spin,
+  theme,
 } from 'antd';
 import {
   UserOutlined,
@@ -42,6 +43,7 @@ export default function Layout() {
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
   const { t } = useTranslation();
+  const { token: tk } = theme.useToken();
 
   const activeKey =
     location.pathname === '/'
@@ -57,7 +59,7 @@ export default function Layout() {
           display: 'flex',
           alignItems: 'center',
           gap: isMobile ? 8 : 24,
-          borderBottom: '1px solid #e5e7eb',
+          borderBottom: `1px solid ${tk.colorBorderSecondary}`,
           padding: isMobile ? '0 12px' : '0 24px',
         }}
       >

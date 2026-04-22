@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Space, Button, Input, Typography, Popconfirm, message } from 'antd';
+import { Space, Button, Input, Typography, Popconfirm, message, theme } from 'antd';
 import { DeleteOutlined, EnterOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -61,6 +61,7 @@ export default function CommentSection({ targetType, targetId, questionId, comme
   const me = useCurrentUser();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { token: tk } = theme.useToken();
   const [addingRoot, setAddingRoot] = useState(false);
   const [rootDraft, setRootDraft] = useState('');
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
@@ -142,13 +143,13 @@ export default function CommentSection({ targetType, targetId, questionId, comme
       style={{
         marginTop: 12,
         paddingTop: 8,
-        borderTop: '1px dashed #e5e7eb',
+        borderTop: `1px dashed ${tk.colorBorderSecondary}`,
       }}
     >
       {threaded.length > 0 && (
         <Space direction="vertical" size={6} style={{ width: '100%', marginBottom: 8 }}>
           {threaded.map((root) => (
-            <div key={root.id} style={{ fontSize: 13, color: '#3f3f46' }}>
+            <div key={root.id} style={{ fontSize: 13, color: tk.colorText }}>
               <div>
                 {renderCommentBody(root)}
                 <Button
@@ -167,17 +168,21 @@ export default function CommentSection({ targetType, targetId, questionId, comme
                     marginLeft: 16,
                     marginTop: 4,
                     paddingLeft: 8,
-                    borderLeft: '2px solid #f0f0f0',
+                    borderLeft: `2px solid ${tk.colorBorderSecondary}`,
                   }}
                 >
                   {root.replies.map((reply) => (
                     <div
                       key={reply.id}
-                      style={{ fontSize: 12.5, color: '#52525b', padding: '2px 0' }}
+                      style={{
+                        fontSize: 12.5,
+                        color: tk.colorTextSecondary,
+                        padding: '2px 0',
+                      }}
                     >
                       <EnterOutlined
                         rotate={90}
-                        style={{ color: '#a0a0a0', marginRight: 4 }}
+                        style={{ color: tk.colorTextDescription, marginRight: 4 }}
                       />
                       {renderCommentBody(reply)}
                     </div>
