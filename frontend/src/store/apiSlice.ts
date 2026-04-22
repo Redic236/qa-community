@@ -1,5 +1,12 @@
 import { createApi, fetchBaseQuery, type BaseQueryFn } from '@reduxjs/toolkit/query/react';
 import type { FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
+
+// RTK Query doesn't re-export PatchHandle at the public entry, but the
+// return of updateQueryData() dispatch is typed as a ThunkAction<PatchHandle>.
+// We only need `undo`, so a structural minimum keeps the import surface small.
+interface PatchHandle {
+  undo(): void;
+}
 import i18n from '@/i18n';
 import type { RootState } from './index';
 import { logout } from './authSlice';
@@ -222,6 +229,66 @@ export const apiSlice = createApi({
         body: { targetType, targetId },
       }),
       transformResponse: (r: ApiOk<{ liked: boolean; votes: number }>) => unwrap(r),
+      // Optimistic update: patch every matching cache entry BEFORE the network
+      // round-trip completes so the like icon flips instantly. Server truth
+      // still lands via invalidatesTags refetch; if the real response
+      // disagrees (or errors), we roll back the patch.
+      async onQueryStarted(
+        { targetType, targetId, questionId },
+        { dispatch, queryFulfilled, getState }
+      ) {
+        const patches: PatchHandle[] = [];
+
+        // 1. Question detail cache — contains the target question + its answers
+        patches.push(
+          dispatch(
+            apiSlice.util.updateQueryData('getQuestion', questionId, (draft) => {
+              if (targetType === 'question' && draft.id === targetId) {
+                const wasLiked = draft.liked === true;
+                draft.liked = !wasLiked;
+                draft.votes += wasLiked ? -1 : 1;
+              } else if (targetType === 'answer') {
+                const ans = draft.answers.find((a) => a.id === targetId);
+                if (ans) {
+                  const wasLiked = ans.liked === true;
+                  ans.liked = !wasLiked;
+                  ans.votes += wasLiked ? -1 : 1;
+                }
+              }
+            })
+          )
+        );
+
+        // 2. Every cached listQuestions variant — a question may sit in
+        //    multiple list caches (different sort / tag / page). Iterate the
+        //    RTK Query state to find them rather than trying to guess keys.
+        if (targetType === 'question') {
+          const queries = (getState() as RootState).api.queries;
+          for (const entry of Object.values(queries)) {
+            if (!entry || entry.endpointName !== 'listQuestions') continue;
+            const args = entry.originalArgs as ListQuestionsArgs | undefined;
+            if (!args) continue;
+            patches.push(
+              dispatch(
+                apiSlice.util.updateQueryData('listQuestions', args, (draft) => {
+                  const item = draft.items.find((q) => q.id === targetId);
+                  if (!item) return;
+                  const wasLiked = item.liked === true;
+                  item.liked = !wasLiked;
+                  item.votes += wasLiked ? -1 : 1;
+                })
+              )
+            );
+          }
+        }
+
+        try {
+          await queryFulfilled;
+        } catch {
+          // Network failure / 4xx — unwind every optimistic patch.
+          for (const p of patches) p.undo();
+        }
+      },
       invalidatesTags: (_res, _err, { questionId }) => [
         { type: 'Question', id: questionId },
         'QuestionList',
