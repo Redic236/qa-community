@@ -26,7 +26,11 @@ export default defineConfig({
             output: {
                 manualChunks: {
                     'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-                    'antd-vendor': ['antd', '@ant-design/icons'],
+                    // Separate chunks so we can observe icon tree-shaking in the
+                    // final sizes AND let the browser cache antd core independently
+                    // of icon additions during iteration.
+                    'antd-vendor': ['antd'],
+                    'icons-vendor': ['@ant-design/icons'],
                     'charts-vendor': ['recharts'],
                     'redux-vendor': ['@reduxjs/toolkit', 'react-redux'],
                     'form-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],

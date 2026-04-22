@@ -388,5 +388,9 @@
     "zhCN": "中文",
     "enUS": "English",
     "switch": "切换语言"
+  },
+  "theme": {
+    "toDark": "切到暗色",
+    "toLight": "切到亮色"
   }
 }

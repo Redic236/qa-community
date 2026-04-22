@@ -27,8 +27,10 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import NotificationsBell from './NotificationsBell';
 import LevelBadge from './LevelBadge';
 import LanguageSwitcher from './LanguageSwitcher';
+import ThemeToggle from './ThemeToggle';
 import ScrollToTop from './ScrollToTop';
 import ErrorBoundary from './ErrorBoundary';
+import { prefetchRoute } from '@/utils/prefetch';
 
 const { Header, Content } = AntLayout;
 
@@ -79,12 +81,21 @@ export default function Layout() {
               { key: 'home', label: <Link to="/">{t('nav.home')}</Link> },
               {
                 key: 'leaderboard',
-                label: <Link to="/leaderboard">{t('nav.leaderboard')}</Link>,
+                label: (
+                  <Link
+                    to="/leaderboard"
+                    onMouseEnter={() => prefetchRoute('leaderboard')}
+                    onFocus={() => prefetchRoute('leaderboard')}
+                  >
+                    {t('nav.leaderboard')}
+                  </Link>
+                ),
               },
             ]}
           />
         )}
         {isMobile && <div style={{ flex: 1 }} />}
+        <ThemeToggle />
         <LanguageSwitcher />
         {user ? (
           <Space size={isMobile ? 4 : 12}>
@@ -92,6 +103,8 @@ export default function Layout() {
               type="primary"
               icon={<EditOutlined />}
               onClick={() => navigate('/questions/new')}
+              onMouseEnter={() => prefetchRoute('ask')}
+              onFocus={() => prefetchRoute('ask')}
             >
               {!isMobile && t('nav.ask')}
             </Button>
@@ -106,6 +119,17 @@ export default function Layout() {
             )}
             <Dropdown
               trigger={['click', 'hover']}
+              onOpenChange={(open) => {
+                // Warm every chunk that might be one click away. Cheap and
+                // happens before the user has even decided which link to hit.
+                if (!open) return;
+                prefetchRoute('profile');
+                prefetchRoute('achievements');
+                if (user.role === 'admin') {
+                  prefetchRoute('adminDashboard');
+                  prefetchRoute('adminReports');
+                }
+              }}
               menu={{
                 items: [
                   ...(isMobile
@@ -172,8 +196,19 @@ export default function Layout() {
           </Space>
         ) : (
           <Space size={4}>
-            <Button onClick={() => navigate('/login')}>{t('nav.login')}</Button>
-            <Button type="primary" onClick={() => navigate('/register')}>
+            <Button
+              onClick={() => navigate('/login')}
+              onMouseEnter={() => prefetchRoute('login')}
+              onFocus={() => prefetchRoute('login')}
+            >
+              {t('nav.login')}
+            </Button>
+            <Button
+              type="primary"
+              onClick={() => navigate('/register')}
+              onMouseEnter={() => prefetchRoute('register')}
+              onFocus={() => prefetchRoute('register')}
+            >
               {t('nav.register')}
             </Button>
           </Space>

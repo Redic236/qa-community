@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
+import type { InputRef } from 'antd';
 import {
   Card,
   Tabs,
@@ -27,6 +28,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import EmptyState from '@/components/EmptyState';
 import { LoadingList } from '@/components/LoadingCard';
+import { prefetchRoute } from '@/utils/prefetch';
 import type { Question, QuestionSort } from '@/types/models';
 
 const PAGE_SIZE = 10;
@@ -53,6 +55,25 @@ export default function HomePage() {
   const q = searchParams.get('q') ?? '';
 
   usePageTitle(t(`home.tabs.${sort}`));
+
+  // "/" focuses the search input, like GitHub/Slack/StackOverflow. Skip if the
+  // user is already typing in another field — otherwise the slash gets eaten
+  // and people can't type "/" as a literal character in their own content.
+  const searchInputRef = useRef<InputRef>(null);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key !== '/') return;
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      const isTyping =
+        tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable;
+      if (isTyping) return;
+      e.preventDefault();
+      searchInputRef.current?.focus();
+      searchInputRef.current?.select();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const queryArgs = useMemo(
     () => ({
@@ -146,6 +167,7 @@ export default function HomePage() {
             style={{ marginBottom: -8 }}
           />
           <Input.Search
+            ref={searchInputRef}
             placeholder={t('home.searchPlaceholder')}
             allowClear
             defaultValue={q}
@@ -235,6 +257,8 @@ export default function HomePage() {
                     <Link
                       to={`/questions/${question.id}`}
                       style={{ fontSize: 16, fontWeight: 500 }}
+                      onMouseEnter={() => prefetchRoute('questionDetail')}
+                      onFocus={() => prefetchRoute('questionDetail')}
                     >
                       {question.title}
                     </Link>
