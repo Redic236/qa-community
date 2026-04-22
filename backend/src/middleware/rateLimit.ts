@@ -4,17 +4,25 @@ import type { Request } from 'express';
 import { redis } from '../config/redis';
 
 /**
- * Only enforce rate limits in production. Dev iteration would hit limits
- * during normal manual testing; E2E (which runs against the dev MySQL backend)
- * would burst through any reasonable threshold for legit reasons. Set
- * NODE_ENV=production to turn enforcement on.
+ * Rate limiter is enforced by default in every environment EXCEPT the two
+ * that burst legitimately (test, development). This closes the original
+ * gap where staging / an unlabeled deployment (`NODE_ENV` unset or typo'd
+ * as "produciton") silently ran without any brute-force / spam guard.
  *
- * If you need to validate the limiter behavior locally, set
- * RATE_LIMIT_FORCE=1 to override the skip.
+ * Skip rules, top-down:
+ *   - RATE_LIMIT_FORCE=1 → always enforce (overrides dev/test; used by the
+ *     limiter's own integration tests).
+ *   - NODE_ENV=test          → skip (Jest / E2E burst past any threshold).
+ *   - NODE_ENV=development   → skip (normal local iteration).
+ *   - RATE_LIMIT_DISABLE=1   → skip (documented escape hatch for odd envs).
+ *   - everything else        → enforce.
  */
 const skipRateLimit = (): boolean => {
   if (process.env.RATE_LIMIT_FORCE === '1') return false;
-  return process.env.NODE_ENV !== 'production';
+  const nodeEnv = process.env.NODE_ENV;
+  if (nodeEnv === 'test' || nodeEnv === 'development') return true;
+  if (process.env.RATE_LIMIT_DISABLE === '1') return true;
+  return false;
 };
 
 const standardErrorBody = {

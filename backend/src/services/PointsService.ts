@@ -1,5 +1,5 @@
 import { Op, type Transaction } from 'sequelize';
-import { PointRecord, User } from '../models';
+import { sequelize, PointRecord, User } from '../models';
 import {
   POINT_TYPES,
   POINTS_RULES,
@@ -74,29 +74,39 @@ export class PointsService {
    *     event's natural value, never a clipped one.
    */
   static async award(params: AwardParams): Promise<PointRecord | null> {
-    const { userId, type, points, relatedId, transaction } = params;
+    // Core work: lock the user row first, then cap-check, then write. The row
+    // lock (SELECT ... FOR UPDATE under MySQL) serialises concurrent awards
+    // to the same user so two racing "like" events can't both read sum=195
+    // and each write +5 → 205, bypassing a cap=200. SQLite ignores the lock
+    // hint — fine for tests which run sequentially anyway.
+    const run = async (t: Transaction): Promise<PointRecord | null> => {
+      const { userId, type, points, relatedId } = params;
 
-    const cap = getDailyPassiveCap();
-    if (cap > 0 && points > 0 && PASSIVE_POINT_TYPES.includes(type)) {
-      const earnedToday = await this.sumDailyPassiveEarnings(userId, transaction);
-      if (earnedToday + points > cap) {
-        // Capped — silently skip. Vote / acceptance still succeeds upstream
-        // (target.votes / isAccepted are updated by callers in the same tx).
-        return null;
+      await User.findByPk(userId, { lock: t.LOCK.UPDATE, transaction: t });
+
+      const cap = getDailyPassiveCap();
+      if (cap > 0 && points > 0 && PASSIVE_POINT_TYPES.includes(type)) {
+        const earnedToday = await this.sumDailyPassiveEarnings(userId, t);
+        if (earnedToday + points > cap) {
+          // Capped — silently skip. Vote / acceptance still succeeds upstream
+          // (target.votes / isAccepted are updated by callers in the same tx).
+          return null;
+        }
       }
-    }
 
-    const record = await PointRecord.create(
-      { userId, type, points, relatedId: relatedId ?? null },
-      { transaction }
-    );
+      const record = await PointRecord.create(
+        { userId, type, points, relatedId: relatedId ?? null },
+        { transaction: t }
+      );
 
-    await User.increment(
-      { points },
-      { where: { id: userId }, transaction }
-    );
+      await User.increment({ points }, { where: { id: userId }, transaction: t });
 
-    return record;
+      return record;
+    };
+
+    // Either nest in the caller's transaction (so the lock participates in
+    // their commit) or open our own. Either way `run()` sees a real tx.
+    return params.transaction ? run(params.transaction) : sequelize.transaction(run);
   }
 
   static forAskQuestion(

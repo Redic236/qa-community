@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { AuthService } from '../services/AuthService';
+import { User } from '../models';
 import { ROLES, type Role } from '../utils/constants';
 import { ForbiddenError, UnauthorizedError } from '../utils/errors';
 
@@ -19,13 +20,11 @@ function extractToken(req: Request): string | null {
     const token = header.slice('Bearer '.length).trim();
     if (token) return token;
   }
-  // EventSource cannot send custom headers, so the SSE endpoint accepts the
-  // token via query string. Limited to GET callers — mutations still require
-  // the Authorization header.
-  if (req.method === 'GET') {
-    const q = req.query.token;
-    if (typeof q === 'string' && q) return q;
-  }
+  // Note: the SSE endpoint (`/api/notifications/stream`) used to accept a
+  // `?token=<JWT>` fallback here for EventSource (which can't send custom
+  // headers). That was removed — raw JWTs in query strings leak to nginx
+  // access logs / proxy logs / Referer. The stream now authenticates via a
+  // one-shot ticket issued through POST /api/notifications/stream/ticket.
   return null;
 }
 
@@ -58,14 +57,34 @@ export function optionalAuth(req: Request, _res: Response, next: NextFunction): 
 }
 
 /**
- * Must follow `requireAuth` in the route chain. Rejects with 403 if the JWT's
- * role claim isn't admin. Note: the role is read from the token, not the DB —
- * users promoted to admin must re-login before the new claim takes effect.
+ * Must follow `requireAuth` in the route chain.
+ *
+ * Two-stage check:
+ *   1. JWT role claim MUST be admin — cheap fast fail for non-admin tokens.
+ *   2. DB role MUST also be admin — defends against a previously-admin user
+ *      whose token was minted before their role was revoked. Without the
+ *      DB verification, a demoted admin keeps full access until their
+ *      JWT_EXPIRES_IN window (7d default) closes.
+ *
+ * The DB hit is only on genuine admin paths (small, cold) so the latency is
+ * acceptable; caching it is a separate concern.
  */
-export function requireAdmin(req: Request, _res: Response, next: NextFunction): void {
+export async function requireAdmin(
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): Promise<void> {
   if (!req.userId) return next(new UnauthorizedError());
   if (req.userRole !== ROLES.ADMIN) {
     return next(new ForbiddenError('Admin access required'));
   }
-  next();
+  try {
+    const user = await User.findByPk(req.userId, { attributes: ['id', 'role'] });
+    if (!user || user.role !== ROLES.ADMIN) {
+      return next(new ForbiddenError('Admin access required'));
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
 }

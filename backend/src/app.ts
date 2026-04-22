@@ -1,5 +1,6 @@
 import express from 'express';
-import cors from 'cors';
+import cors, { type CorsOptions } from 'cors';
+import helmet from 'helmet';
 import { sequelize } from './models';
 import { env } from './config/env';
 import { redis } from './config/redis';
@@ -13,9 +14,30 @@ export const app = express();
 // Detect language from Accept-Language and expose req.t() before any handler
 // can throw. Resources are bundled at import time so init is synchronous.
 initI18n();
-app.use(cors({ exposedHeaders: ['Content-Language'] }));
+
+// Security headers: X-Content-Type-Options, Strict-Transport-Security (on
+// HTTPS only), Referrer-Policy, and friends. CSP is disabled for now — the
+// frontend is served by nginx, not this API, so our responses don't need a
+// restrictive CSP and turning it on would break the /health JSON response
+// for curl tooling.
+app.use(helmet({ contentSecurityPolicy: false }));
+
+// CORS: whitelist origins when ALLOWED_ORIGINS is set. Empty → permissive
+// (dev only). In production, compose wiring sets this to the frontend host
+// so other domains can't ride the logged-in user's browser to hit the API.
+const allowedOrigins = env.ALLOWED_ORIGINS
+  ? env.ALLOWED_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean)
+  : null;
+const corsOptions: CorsOptions = {
+  exposedHeaders: ['Content-Language'],
+  origin: allowedOrigins
+    ? // Allow requests with no Origin (same-origin, curl) plus the whitelist.
+      (origin, cb) => cb(null, !origin || allowedOrigins.includes(origin))
+    : true,
+};
+app.use(cors(corsOptions));
 app.use(i18nextMiddleware.handle(i18next));
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
 
 // Wire SSE pub/sub. With Redis available, every replica publishes notifications
 // onto a shared channel; each replica's subscriber fans out to its own local

@@ -74,8 +74,18 @@ export class VoteService {
       const isSelf = authorId === input.userId;
       const isQuestion = input.targetType === VOTE_TARGET_TYPE.QUESTION;
 
-      const existing = await Vote.findOne({
+      // Race-safe toggle via findOrCreate: atomic at the DB level thanks to
+      // the unique index on (user_id, target_type, target_id). Two concurrent
+      // "first like" clicks — e.g. user double-clicks or has two tabs —
+      // resolve as one create + one no-op instead of one success + one
+      // UniqueConstraintError bubbling up as 500.
+      const [, created] = await Vote.findOrCreate({
         where: {
+          userId: input.userId,
+          targetType: input.targetType,
+          targetId: input.targetId,
+        },
+        defaults: {
           userId: input.userId,
           targetType: input.targetType,
           targetId: input.targetId,
@@ -83,8 +93,16 @@ export class VoteService {
         transaction: t,
       });
 
-      if (existing) {
-        await existing.destroy({ transaction: t });
+      if (!created) {
+        // Row existed → this click was an unlike.
+        await Vote.destroy({
+          where: {
+            userId: input.userId,
+            targetType: input.targetType,
+            targetId: input.targetId,
+          },
+          transaction: t,
+        });
         await adjustVotes(input.targetType, input.targetId, -1, t);
         if (!isSelf) {
           await (isQuestion
@@ -92,14 +110,7 @@ export class VoteService {
             : PointsService.forAnswerUnliked(authorId, input.targetId, t));
         }
       } else {
-        await Vote.create(
-          {
-            userId: input.userId,
-            targetType: input.targetType,
-            targetId: input.targetId,
-          },
-          { transaction: t }
-        );
+        // Freshly created → this click was a like.
         await adjustVotes(input.targetType, input.targetId, 1, t);
         if (!isSelf) {
           await (isQuestion
@@ -110,12 +121,12 @@ export class VoteService {
 
       const updated = await loadTarget(input.targetType, input.targetId, t);
       return {
-        liked: !existing,
+        liked: created,
         votes: updated?.votes ?? 0,
         // Carry data out of the tx so we can fan-out side effects post-commit.
         questionId: target.questionId ?? null,
         authorId,
-        wasNewLike: !existing,
+        wasNewLike: created,
       };
     });
 

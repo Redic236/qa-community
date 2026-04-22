@@ -2,6 +2,32 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/) · 版本号遵循 [SemVer](https://semver.org/)
 
+## [1.0.1] — 2026-04-22
+
+安全补丁版本。v1.0.0 代码审查中发现的 7 项 CRITICAL/HIGH 问题修复。
+
+### 修复（Security）
+
+- **JWT_SECRET 生产兜底**：`NODE_ENV=production` 时若 `JWT_SECRET` 未设置或仍为 dev 默认值 `'dev-secret-change-me'`，启动即 throw；防漏配导致任意 admin token 伪造（`backend/src/config/env.ts`）
+- **requireAdmin 二段校验**：除 JWT role claim 外，再查 DB 核实当前 role；降权 admin 7 天内持旧 token 通过的问题消除（`backend/src/middleware/auth.ts`）
+- **VoteService 并发 race**：改 `Vote.findOrCreate` 原子 toggle；双击 / 双标签同时点赞不再因 unique 约束 500（`backend/src/services/VoteService.ts`）
+- **PointsService cap 并发穿透**：`award` 内对 user 行 `SELECT ... FOR UPDATE`；两个 like 同秒到达不再各自读 195→各写 5→ 205 越过 cap（`backend/src/services/PointsService.ts`）
+- **SSE ticket 认证**：新增 `POST /api/notifications/stream/ticket`（Bearer 认证 → 30s 一次性票据）；`/stream?ticket=...` 消费票据。移除原 `?token=<JWT>` 方式，杜绝 JWT 进 nginx access log / proxy / Referer（`backend/src/services/SseTicketService.ts`、`backend/src/controllers/NotificationController.ts`、`frontend/src/hooks/useNotificationStream.ts`）
+- **rateLimit 默认开**：仅 `NODE_ENV` ∈ {test, development} 时跳过；staging / 未设 NODE_ENV 的环境现有保护。`RATE_LIMIT_DISABLE=1` 为显式逃生口（`backend/src/middleware/rateLimit.ts`）
+- **helmet + CORS 白名单**：加 `helmet()`（X-Content-Type-Options、Referrer-Policy、等）+ `cors({ origin: ALLOWED_ORIGINS })`；生产经 env 声明合法 origin。`express.json({ limit: '100kb' })` 限制请求体大小（`backend/src/app.ts`）
+
+### 其他变更
+
+- `.env.example` 补 `ALLOWED_ORIGINS` 和 `RATE_LIMIT_DISABLE` 说明
+
+### 验证
+
+- 后端 tsc + 148 Jest 全绿
+- E2E 20/20 通过
+- 前端 tsc 通过
+
+---
+
 ## [1.0.0] — 2026-04-22
 
 问答社区首个稳定版本。PRD P0 + P1 全部落地 + 6 轮功能扩展 + 多轮性能/体验优化。

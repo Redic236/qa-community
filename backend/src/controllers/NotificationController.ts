@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { NotificationService } from '../services/NotificationService';
 import { NotificationStream } from '../services/NotificationStream';
+import { SseTicketService } from '../services/SseTicketService';
 import { UnauthorizedError } from '../utils/errors';
 import { asyncHandler } from '../middleware/asyncHandler';
 
@@ -36,9 +37,27 @@ export const list = asyncHandler(async (req, res) => {
   });
 });
 
-export const stream = asyncHandler(async (req, res) => {
+/**
+ * Issue a short-lived single-use ticket for SSE auth. Frontend exchanges its
+ * normal Authorization Bearer token for a ticket here, then connects to
+ * /stream?ticket=<...>. Tickets are 30s / one-shot so query-string leakage
+ * via logs has near-zero attack value.
+ */
+export const issueStreamTicket = asyncHandler(async (req, res) => {
   if (!req.userId) throw new UnauthorizedError();
-  const userId = req.userId;
+  const { ticket, ttlSeconds } = SseTicketService.issue(req.userId);
+  res.json({ success: true, data: { ticket, ttlSeconds } });
+});
+
+/**
+ * Stream endpoint — authenticated via ticket query param (EventSource can't
+ * send custom headers). The ticket was issued by an Authorization-header-
+ * authenticated POST to /ticket, so the actual JWT never rides a URL.
+ */
+export const stream = asyncHandler(async (req, res) => {
+  const ticket = typeof req.query.ticket === 'string' ? req.query.ticket : '';
+  const userId = ticket ? SseTicketService.consume(ticket) : null;
+  if (userId === null) throw new UnauthorizedError();
   const unsubscribe = NotificationStream.subscribe(userId, res);
   // Express ends the request when the client closes the connection — wire the
   // teardown both ways so we drop the subscriber and clear the heartbeat.
