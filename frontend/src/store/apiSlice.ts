@@ -22,6 +22,9 @@ import type {
   AppNotification,
   NotificationListResult,
   AdminStats,
+  LeaderboardUser,
+  LeaderboardQuestion,
+  LeaderboardRange,
 } from '@/types/models';
 
 const rawBaseQuery = fetchBaseQuery({
@@ -65,6 +68,7 @@ export const apiSlice = createApi({
     'Reports',
     'Notifications',
     'AdminStats',
+    'Leaderboard',
   ],
   endpoints: (build) => ({
     register: build.mutation<AuthResult, { username: string; email: string; password: string }>({
@@ -310,6 +314,29 @@ export const apiSlice = createApi({
       invalidatesTags: ['Notifications'],
     }),
 
+    getUserLeaderboard: build.query<LeaderboardUser[], { limit?: number } | void>({
+      query: (arg) => {
+        const limit = arg && 'limit' in arg && arg.limit ? arg.limit : 20;
+        return `/leaderboard?scope=users&limit=${limit}`;
+      },
+      transformResponse: (r: ApiOk<LeaderboardUser[]>) => unwrap(r),
+      providesTags: [{ type: 'Leaderboard', id: 'users' }],
+    }),
+    getQuestionLeaderboard: build.query<
+      LeaderboardQuestion[],
+      { range?: LeaderboardRange; limit?: number } | void
+    >({
+      query: (arg) => {
+        const range = arg && 'range' in arg && arg.range ? arg.range : 'all';
+        const limit = arg && 'limit' in arg && arg.limit ? arg.limit : 20;
+        return `/leaderboard?scope=questions&range=${range}&limit=${limit}`;
+      },
+      transformResponse: (r: ApiOk<LeaderboardQuestion[]>) => unwrap(r),
+      providesTags: (_res, _err, arg) => [
+        { type: 'Leaderboard', id: `questions-${(arg && 'range' in arg && arg.range) || 'all'}` },
+      ],
+    }),
+
     getAdminStats: build.query<AdminStats, { days?: 7 | 30 | 90 } | void>({
       query: (arg) => {
         const days = arg && 'days' in arg && arg.days ? arg.days : 30;
@@ -363,4 +390,6 @@ export const {
   useListNotificationsQuery,
   useMarkNotificationsReadMutation,
   useGetAdminStatsQuery,
+  useGetUserLeaderboardQuery,
+  useGetQuestionLeaderboardQuery,
 } = apiSlice;

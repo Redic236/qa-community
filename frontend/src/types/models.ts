@@ -185,3 +185,24 @@ export interface AdminStats {
   topUsers: AdminTopUser[];
   topTags: AdminTopTag[];
 }
+
+export type LeaderboardScope = 'users' | 'questions';
+export type LeaderboardRange = '7d' | '30d' | 'all';
+
+export interface LeaderboardUser {
+  id: number;
+  username: string;
+  avatar: string | null;
+  points: number;
+}
+
+export interface LeaderboardQuestion {
+  id: number;
+  title: string;
+  tags: string[];
+  votes: number;
+  answersCount: number;
+  isSolved: boolean;
+  authorId: number;
+  createdAt: string;
+}

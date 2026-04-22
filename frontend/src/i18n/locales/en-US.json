@@ -20,6 +20,7 @@
   "nav": {
     "siteTitle": "Q&A",
     "home": "Home",
+    "leaderboard": "Leaderboard",
     "ask": "Ask",
     "login": "Log in",
     "register": "Sign up",
@@ -300,6 +301,31 @@
     "fetchFail": "Network issue — make sure the backend is running",
     "unexpected": "Unexpected error",
     "invalidQuestionId": "Invalid question id"
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "subtitle": "Top 20 · live",
+    "tabs": {
+      "users": "Users",
+      "questions": "Questions"
+    },
+    "range": {
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "all": "All time"
+    },
+    "userColumns": {
+      "rank": "Rank",
+      "user": "User",
+      "points": "Points"
+    },
+    "questionColumns": {
+      "rank": "Rank",
+      "title": "Question",
+      "votes": "Votes",
+      "answers": "Answers"
+    },
+    "empty": "No data yet"
   },
   "language": {
     "zhCN": "中文",

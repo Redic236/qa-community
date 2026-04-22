@@ -36,7 +36,12 @@ export default function Layout() {
   const isMobile = !screens.md;
   const { t } = useTranslation();
 
-  const activeKey = location.pathname === '/' ? 'home' : '';
+  const activeKey =
+    location.pathname === '/'
+      ? 'home'
+      : location.pathname.startsWith('/leaderboard')
+        ? 'leaderboard'
+        : '';
 
   return (
     <AntLayout style={{ minHeight: '100vh' }}>
@@ -65,7 +70,13 @@ export default function Layout() {
             mode="horizontal"
             selectedKeys={activeKey ? [activeKey] : []}
             style={{ flex: 1, border: 'none' }}
-            items={[{ key: 'home', label: <Link to="/">{t('nav.home')}</Link> }]}
+            items={[
+              { key: 'home', label: <Link to="/">{t('nav.home')}</Link> },
+              {
+                key: 'leaderboard',
+                label: <Link to="/leaderboard">{t('nav.leaderboard')}</Link>,
+              },
+            ]}
           />
         )}
         {isMobile && <div style={{ flex: 1 }} />}

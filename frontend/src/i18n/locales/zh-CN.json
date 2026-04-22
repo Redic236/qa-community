@@ -20,6 +20,7 @@
   "nav": {
     "siteTitle": "问答社区",
     "home": "首页",
+    "leaderboard": "排行榜",
     "ask": "提问",
     "login": "登录",
     "register": "注册",
@@ -300,6 +301,31 @@
     "fetchFail": "网络异常，请检查后端服务是否启动",
     "unexpected": "Unexpected error",
     "invalidQuestionId": "无效的问题 ID"
+  },
+  "leaderboard": {
+    "title": "排行榜",
+    "subtitle": "Top 20 · 实时更新",
+    "tabs": {
+      "users": "用户榜",
+      "questions": "问题榜"
+    },
+    "range": {
+      "7d": "近 7 天",
+      "30d": "近 30 天",
+      "all": "全部时间"
+    },
+    "userColumns": {
+      "rank": "排名",
+      "user": "用户",
+      "points": "积分"
+    },
+    "questionColumns": {
+      "rank": "排名",
+      "title": "问题",
+      "votes": "点赞",
+      "answers": "回答"
+    },
+    "empty": "暂无数据"
   },
   "language": {
     "zhCN": "中文",

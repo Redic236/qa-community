@@ -8,6 +8,7 @@ import reportsRouter from './reports';
 import commentsRouter from './comments';
 import notificationsRouter from './notifications';
 import adminRouter from './admin';
+import leaderboardRouter from './leaderboard';
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use('/reports', reportsRouter);
 router.use('/comments', commentsRouter);
 router.use('/notifications', notificationsRouter);
 router.use('/admin', adminRouter);
+router.use('/leaderboard', leaderboardRouter);
 
 export default router;

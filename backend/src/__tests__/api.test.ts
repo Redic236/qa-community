@@ -1772,3 +1772,98 @@ describe('GET /api/admin/stats', () => {
     expect(res.body.data.daily.length).toBe(30);
   });
 });
+
+describe('GET /api/leaderboard', () => {
+  test('defaults to users scope, returns lifetime top by points', async () => {
+    const alice = await registerUser('lb_alice');
+    const bob = await registerUser('lb_bob');
+    const asker = await registerUser('lb_asker');
+
+    const q = await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${asker.token}`)
+      .send({ title: 'Leaderboard seed title', content: 'Leaderboard seed content body.' });
+    await request(app)
+      .post('/api/votes')
+      .set('Authorization', `Bearer ${alice.token}`)
+      .send({ targetType: 'question', targetId: q.body.data.id });
+
+    const res = await request(app).get('/api/leaderboard');
+    expect(res.status).toBe(200);
+    expect(res.body.meta).toEqual({ scope: 'users', range: 'all' });
+    expect(Array.isArray(res.body.data)).toBe(true);
+    for (const u of res.body.data) {
+      expect(u).not.toHaveProperty('email');
+      expect(u).not.toHaveProperty('password');
+      expect(u).toHaveProperty('id');
+      expect(u).toHaveProperty('username');
+      expect(u).toHaveProperty('points');
+    }
+    const pts = res.body.data.map((u: { points: number }) => u.points);
+    for (let i = 1; i < pts.length; i++) expect(pts[i - 1]).toBeGreaterThanOrEqual(pts[i]);
+    void bob;
+  });
+
+  test('scope=questions sorts by votes desc', async () => {
+    const asker = await registerUser('lbq_asker');
+    const liker = await registerUser('lbq_liker');
+
+    const low = await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${asker.token}`)
+      .send({ title: 'Low votes title here', content: 'Low votes content body.' });
+    const high = await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${asker.token}`)
+      .send({ title: 'High votes title here', content: 'High votes content body.' });
+    await request(app)
+      .post('/api/votes')
+      .set('Authorization', `Bearer ${liker.token}`)
+      .send({ targetType: 'question', targetId: high.body.data.id });
+
+    const res = await request(app).get('/api/leaderboard?scope=questions&range=all');
+    expect(res.status).toBe(200);
+    expect(res.body.meta.scope).toBe('questions');
+    const ids = (res.body.data as { id: number; votes: number }[]).map((r) => r.id);
+    expect(ids.indexOf(high.body.data.id)).toBeLessThan(ids.indexOf(low.body.data.id));
+    expect(res.body.data[0]).toHaveProperty('tags');
+    expect(Array.isArray(res.body.data[0].tags)).toBe(true);
+  });
+
+  test('range=7d excludes older questions', async () => {
+    const asker = await registerUser('lb_range_asker');
+    const q = await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${asker.token}`)
+      .send({ title: 'Recent range title', content: 'Recent range content body.' });
+
+    await Question.update(
+      { createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000) },
+      { where: { id: q.body.data.id }, silent: true }
+    );
+
+    const res7d = await request(app).get('/api/leaderboard?scope=questions&range=7d');
+    const ids7d = (res7d.body.data as { id: number }[]).map((r) => r.id);
+    expect(ids7d).not.toContain(q.body.data.id);
+
+    const resAll = await request(app).get('/api/leaderboard?scope=questions&range=all');
+    const idsAll = (resAll.body.data as { id: number }[]).map((r) => r.id);
+    expect(idsAll).toContain(q.body.data.id);
+  });
+
+  test('rejects invalid scope / range / limit', async () => {
+    const a = await request(app).get('/api/leaderboard?scope=bogus');
+    expect(a.status).toBe(400);
+    const b = await request(app).get('/api/leaderboard?range=365d');
+    expect(b.status).toBe(400);
+    const c = await request(app).get('/api/leaderboard?limit=9999');
+    expect(c.status).toBe(400);
+  });
+
+  test('emits ETag + Cache-Control (cacheable middleware)', async () => {
+    const res = await request(app).get('/api/leaderboard');
+    expect(res.status).toBe(200);
+    expect(res.headers['etag']).toMatch(/^W\//);
+    expect(res.headers['cache-control']).toContain('must-revalidate');
+  });
+});
