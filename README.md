@@ -1,5 +1,9 @@
 # 问答社区
 
+[![CI](https://github.com/Redic236/qa-community/actions/workflows/ci.yml/badge.svg)](https://github.com/Redic236/qa-community/actions/workflows/ci.yml)
+[![Release Docker Images](https://github.com/Redic236/qa-community/actions/workflows/release.yml/badge.svg)](https://github.com/Redic236/qa-community/actions/workflows/release.yml)
+[![Latest release](https://img.shields.io/github/v/release/Redic236/qa-community?sort=semver)](https://github.com/Redic236/qa-community/releases/latest)
+
 一个完整的问答社区 MVP：发问、回答、点赞、采纳、积分、个人中心。
 
 ## 仓库结构
@@ -43,13 +47,15 @@ docker compose exec backend npx tsx scripts/promote-admin.ts alice@example.com
 `.github/workflows/release.yml` 在每次 push 到 main / 打 v*.*.* tag 时自动构建并推送到 GitHub Container Registry：
 
 ```bash
-docker pull ghcr.io/<owner>/<repo>-backend:latest
-docker pull ghcr.io/<owner>/<repo>-frontend:latest
+docker pull ghcr.io/redic236/qa-community-backend:latest
+docker pull ghcr.io/redic236/qa-community-frontend:latest
 ```
 
-可用 tag：`latest`（默认分支）、`sha-<short>`（每次提交）、`<branch>`、`v1`、`v1.2`、`v1.2.3`（打 tag 后）。
+> GHCR 包默认是私有的。首次拉取若提示 `unauthorized`，到 GitHub → 个人 / 组织 → Packages → `qa-community-backend` / `-frontend` → Package settings → Change visibility → Public。改成 Public 之后任何人都可以直接 pull。
 
-`docker-compose.yml` 想换成预构建镜像：把 `build:` 段替换为 `image: ghcr.io/<owner>/<repo>-backend:latest`，跳过本地构建。
+可用 tag：`latest`（默认分支）、`sha-<short>`（每次提交）、`<branch>`、`1`、`1.1`、`1.1.1`（对应 semver tag）。所有发行版本见 [Releases 页](https://github.com/Redic236/qa-community/releases)。
+
+想把 `docker-compose.yml` 换成预构建镜像：把 `build:` 段替换为 `image: ghcr.io/redic236/qa-community-backend:latest`（前端同理），跳过本地构建。
 
 ### 本地开发（不走 Docker）
 
