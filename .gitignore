@@ -33,3 +33,6 @@ test-results/
 # Docker local bind mounts (named volumes don't show up here)
 mysql_data/
 redis_data/
+
+# Local scratch for GitHub Release note drafts — not shipped
+.release-notes/
