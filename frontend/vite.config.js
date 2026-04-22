@@ -1,8 +1,38 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 import path from 'node:path';
 export default defineConfig({
-    plugins: [react()],
+    plugins: [
+        react(),
+        // Service worker: pre-caches all hashed chunks at install time + serves
+        // them cache-first on repeat visits → second visit is ~0 network.
+        // Auto-updates when a new build lands: the new SW takes over and reloads.
+        // Dev mode is disabled by default so Playwright / hot-reload aren't
+        // touched by stale precache.
+        VitePWA({
+            registerType: 'autoUpdate',
+            includeAssets: ['favicon.ico'],
+            manifest: {
+                name: '问答社区',
+                short_name: 'Q&A',
+                description: '提问、回答、点赞、采纳，积分和徽章激励贡献',
+                theme_color: '#1677ff',
+                background_color: '#f5f6f8',
+                display: 'standalone',
+                lang: 'zh-CN',
+                start_url: '/',
+            },
+            workbox: {
+                // Match the chunks emitted by manualChunks; .json only matters if we
+                // start serving static data — harmless either way.
+                globPatterns: ['**/*.{js,css,html,ico,svg,woff2}'],
+                // Fall back to SPA index for client-route deep links when offline.
+                navigateFallback: '/index.html',
+                navigateFallbackDenylist: [/^\/api\//],
+            },
+        }),
+    ],
     resolve: {
         alias: { '@': path.resolve(__dirname, './src') },
     },
