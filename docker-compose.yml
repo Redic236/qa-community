@@ -1,0 +1,105 @@
+# One-shot stack: MySQL + Redis + backend + nginx-served frontend.
+#
+# Usage:
+#   cp .env.example .env       # set JWT_SECRET and any creds you want to override
+#   docker compose up -d --build
+#   open http://localhost:8080
+#
+# Backend runs migrations on every boot via tsx, so the DB is always at HEAD.
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpw}
+      MYSQL_DATABASE: ${DB_NAME:-qa_community}
+      MYSQL_USER: ${DB_USER:-qa_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-qa_pass}
+    # utf8mb4 + native_password keeps mysql2 client happy without TLS gymnastics.
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    # Healthcheck unblocks the backend's depends_on. Use the application user
+    # so the check exercises the same auth path the app uses.
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h 127.0.0.1 -u $${MYSQL_USER} -p$${MYSQL_PASSWORD} --silent",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [qa]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [qa]
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-qa_community}
+      DB_USER: ${DB_USER:-qa_user}
+      DB_PASSWORD: ${DB_PASSWORD:-qa_pass}
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      # Production guard: rate limiters key off this. Tests bypass it.
+      RATE_LIMIT_FORCE: "1"
+      DAILY_PASSIVE_POINTS_CAP: ${DAILY_PASSIVE_POINTS_CAP:-200}
+      BANNED_WORDS: ${BANNED_WORDS:-}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://localhost:3000/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\"",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+    networks: [qa]
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    networks: [qa]
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  qa:
+    driver: bridge

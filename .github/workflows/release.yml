@@ -1,0 +1,95 @@
+name: Release Docker Images
+
+# Build and push backend + frontend images to GitHub Container Registry.
+#
+# Triggers:
+#   - push to main/master   → tags `latest` + `sha-<short>` + `<branch>`
+#   - push of v*.*.* tags   → tags semver families `1`, `1.2`, `1.2.3`
+#   - manual workflow_dispatch (handy for re-publishing without a code change)
+#
+# Permissions: relies on the auto-issued GITHUB_TOKEN with `packages: write`.
+# No PAT or org-level secret needed.
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*.*.*']
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build:
+    name: Build & push (${{ matrix.image.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - name: backend
+            context: ./backend
+            dockerfile: ./backend/Dockerfile
+          - name: frontend
+            context: ./frontend
+            dockerfile: ./frontend/Dockerfile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Repo name lowercase — required by GHCR. `${{ github.repository }}` keeps
+      # the original casing of "Owner/Repo" which can be mixed-case.
+      - name: Resolve image name
+        id: name
+        run: |
+          repo="${GITHUB_REPOSITORY,,}"
+          echo "image=${{ env.REGISTRY }}/${repo}-${{ matrix.image.name }}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Tag strategy:
+      #   - branch push  → `latest` (default branch only) + `<branch>` + `sha-<short>`
+      #   - tag push     → `1`, `1.2`, `1.2.3`
+      - name: Resolve tags & labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.name.outputs.image }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=sha-,format=short
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.image.context }}
+          file: ${{ matrix.image.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Buildx GHA cache keeps layer reuse across runs (~5 GB cap, scoped).
+          cache-from: type=gha,scope=${{ matrix.image.name }}
+          cache-to: type=gha,scope=${{ matrix.image.name }},mode=max
+          # Single-arch for now — add linux/arm64 here when there's a real need.
+          platforms: linux/amd64
+          provenance: false
