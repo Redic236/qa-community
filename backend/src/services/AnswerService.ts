@@ -5,6 +5,7 @@ import { ModerationService } from './ModerationService';
 import { CacheService, cacheKeys } from './CacheService';
 import { NotificationService, NOTIF } from './NotificationService';
 import { FollowService } from './FollowService';
+import { AchievementService } from './AchievementService';
 import { FOLLOW_TARGET_TYPE } from '../models/Follow';
 import { ROLES, type Role } from '../utils/constants';
 import { ConflictError, ForbiddenError, NotFoundError } from '../utils/errors';
@@ -58,6 +59,11 @@ export class AnswerService {
       NOTIF.QUESTION_ANSWERED,
       { questionId: input.questionId, answerId: result.answer.id, fromUserId: input.authorId }
     );
+
+    // Achievement checks for the answerer (first_answer, prolific_answerer,
+    // points ladder crossings). Fire-and-forget after commit.
+    void AchievementService.checkAndGrant(input.authorId, 'answer.create');
+    void AchievementService.checkAndGrant(input.authorId, 'points.award');
 
     // Fan-out to question followers (excluding the asker — they got the direct
     // question_answered notification already, and the answerer themselves).
@@ -127,6 +133,11 @@ export class AnswerService {
       NOTIF.ANSWER_ACCEPTED,
       { questionId: answer.questionId, answerId: answer.id }
     );
+
+    // Answer author's acceptance count + point bonus may each unlock badges.
+    void AchievementService.checkAndGrant(answer.authorId, 'answer.accept');
+    void AchievementService.checkAndGrant(answer.authorId, 'points.award');
+
     return answer;
   }
 

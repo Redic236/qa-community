@@ -4,6 +4,7 @@ import { VOTE_TARGET_TYPE, type VoteTargetType } from '../models/Vote';
 import { PointsService } from './PointsService';
 import { CacheService, cacheKeys } from './CacheService';
 import { NotificationService, NOTIF } from './NotificationService';
+import { AchievementService } from './AchievementService';
 import { NotFoundError } from '../utils/errors';
 
 export interface ToggleVoteInput {
@@ -137,6 +138,11 @@ export class VoteService {
               fromUserId: input.userId,
             }
       );
+
+      // Content author may have just crossed a likes-received threshold. Also
+      // check points ladder since liking grants +5 to the author.
+      void AchievementService.checkAndGrant(result.authorId, 'vote.like');
+      void AchievementService.checkAndGrant(result.authorId, 'points.award');
     }
 
     return { liked: result.liked, votes: result.votes };

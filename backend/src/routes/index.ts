@@ -10,6 +10,7 @@ import notificationsRouter from './notifications';
 import adminRouter from './admin';
 import leaderboardRouter from './leaderboard';
 import followsRouter from './follows';
+import achievementsRouter from './achievements';
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use('/notifications', notificationsRouter);
 router.use('/admin', adminRouter);
 router.use('/leaderboard', leaderboardRouter);
 router.use('/follows', followsRouter);
+router.use('/achievements', achievementsRouter);
 
 export default router;

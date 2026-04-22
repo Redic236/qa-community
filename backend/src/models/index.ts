@@ -8,6 +8,7 @@ import { Report, initReportModel } from './Report';
 import { Comment, initCommentModel } from './Comment';
 import { Notification, initNotificationModel } from './Notification';
 import { Follow, initFollowModel } from './Follow';
+import { UserAchievement, initUserAchievementModel } from './UserAchievement';
 
 initUserModel(sequelize);
 initQuestionModel(sequelize);
@@ -18,6 +19,7 @@ initReportModel(sequelize);
 initCommentModel(sequelize);
 initNotificationModel(sequelize);
 initFollowModel(sequelize);
+initUserAchievementModel(sequelize);
 
 User.hasMany(Question, { foreignKey: 'authorId', as: 'questions' });
 Question.belongsTo(User, { foreignKey: 'authorId', as: 'author' });
@@ -47,6 +49,9 @@ Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 User.hasMany(Follow, { foreignKey: 'followerId', as: 'follows' });
 Follow.belongsTo(User, { foreignKey: 'followerId', as: 'follower' });
 
+User.hasMany(UserAchievement, { foreignKey: 'userId', as: 'achievements' });
+UserAchievement.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 export {
   sequelize,
   User,
@@ -58,4 +63,5 @@ export {
   Comment,
   Notification,
   Follow,
+  UserAchievement,
 };

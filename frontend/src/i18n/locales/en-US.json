@@ -25,6 +25,7 @@
     "login": "Log in",
     "register": "Sign up",
     "profile": "Profile",
+    "achievements": "Achievements",
     "admin": "Reports",
     "adminDashboard": "Dashboard",
     "logout": "Sign out",
@@ -310,7 +311,45 @@
       "answer_liked": "liked your answer",
       "content_removed": "an admin removed your content",
       "followed_question_answered": "a question you follow has a new answer",
-      "followed_user_posted": "a user you follow posted a new question"
+      "followed_user_posted": "a user you follow posted a new question",
+      "achievement_unlocked": "unlocked a new achievement"
+    }
+  },
+  "achievements": {
+    "title": "Achievements",
+    "subtitle": "Earn badges by contributing",
+    "unlockedCount": "Unlocked",
+    "empty": "No achievements yet",
+    "loginRequired": "Log in to view your achievements",
+    "unlockedAt": "unlocked {{time}}",
+    "tiers": {
+      "bronze": "Bronze",
+      "silver": "Silver",
+      "gold": "Gold"
+    },
+    "names": {
+      "first_question": "First Question",
+      "prolific_asker": "Prolific Asker",
+      "first_answer": "First Answer",
+      "prolific_answerer": "Prolific Answerer",
+      "first_accepted": "First Accepted",
+      "well_accepted": "Trusted Answerer",
+      "liked_once": "First Like",
+      "hundred_likes": "Century",
+      "points_100": "Rookie",
+      "points_500": "Veteran"
+    },
+    "descriptions": {
+      "first_question": "Post your first question",
+      "prolific_asker": "Post {{threshold}} questions",
+      "first_answer": "Post your first answer",
+      "prolific_answerer": "Post {{threshold}} answers",
+      "first_accepted": "Get an answer accepted",
+      "well_accepted": "Get {{threshold}} answers accepted",
+      "liked_once": "Receive your first like",
+      "hundred_likes": "Receive {{threshold}} likes total",
+      "points_100": "Reach {{threshold}} points",
+      "points_500": "Reach {{threshold}} points"
     }
   },
   "errors": {

@@ -79,6 +79,7 @@ export const NOTIFICATION_TYPES = {
   CONTENT_REMOVED: 'content_removed',
   FOLLOWED_QUESTION_ANSWERED: 'followed_question_answered',
   FOLLOWED_USER_POSTED: 'followed_user_posted',
+  ACHIEVEMENT_UNLOCKED: 'achievement_unlocked',
 } as const;
 export type NotificationType =
   (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];

@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { app } from '../app';
-import { sequelize, User, Question, Answer, Vote, PointRecord, Report, Comment, Notification, Follow } from '../models';
+import { sequelize, User, Question, Answer, Vote, PointRecord, Report, Comment, Notification, Follow, UserAchievement } from '../models';
 import { ROLES } from '../utils/constants';
 import { POINTS_RULES } from '../utils/constants';
 import { VOTE_TARGET_TYPE } from '../models/Vote';
@@ -14,6 +14,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
+  await UserAchievement.destroy({ where: {}, truncate: true });
   await Follow.destroy({ where: {}, truncate: true });
   await Notification.destroy({ where: {}, truncate: true });
   await Comment.destroy({ where: {}, truncate: true });
@@ -1220,9 +1221,14 @@ describe('Notifications', () => {
       .get('/api/notifications')
       .set('Authorization', `Bearer ${asker.token}`);
     expect(list.status).toBe(200);
-    expect(list.body.data).toHaveLength(1);
-    expect(list.body.data[0].type).toBe('question_answered');
-    expect(list.body.meta.unread).toBe(1);
+    // Filter out achievement_unlocked noise — asker hits first_question on
+    // this path. We only care the question_answered notification shows up
+    // exactly once.
+    const social = (list.body.data as { type: string }[]).filter(
+      (n) => n.type !== 'achievement_unlocked'
+    );
+    expect(social).toHaveLength(1);
+    expect(social[0].type).toBe('question_answered');
   });
 
   test('accepting an answer notifies the answer author', async () => {
@@ -1292,7 +1298,13 @@ describe('Notifications', () => {
     const list = await request(app)
       .get('/api/notifications')
       .set('Authorization', `Bearer ${asker.token}`);
-    expect(list.body.data).toHaveLength(0);
+    // Achievement unlocks (first_question / first_answer / first_accepted) DO
+    // fire for self-actions — that's intentional. We just want to prove no
+    // social noise (question_answered / answer_accepted / _liked) lands.
+    const social = (list.body.data as { type: string }[]).filter(
+      (n) => n.type !== 'achievement_unlocked'
+    );
+    expect(social).toHaveLength(0);
   });
 
   test('mark-read with all=true clears unread count', async () => {
@@ -1310,13 +1322,16 @@ describe('Notifications', () => {
     const before = await request(app)
       .get('/api/notifications')
       .set('Authorization', `Bearer ${asker.token}`);
-    expect(before.body.meta.unread).toBe(1);
+    // Achievement unlocks (first_question) are also unread; be lenient about
+    // the exact count as long as there IS unread traffic to clear.
+    expect(before.body.meta.unread).toBeGreaterThanOrEqual(1);
+    const beforeCount = before.body.meta.unread;
 
     const mark = await request(app)
       .post('/api/notifications/mark-read')
       .set('Authorization', `Bearer ${asker.token}`)
       .send({ all: true });
-    expect(mark.body.data.affected).toBe(1);
+    expect(mark.body.data.affected).toBe(beforeCount);
 
     const after = await request(app)
       .get('/api/notifications')
@@ -2187,5 +2202,141 @@ describe('Follow — questions & users', () => {
     const askerTypes = (askerNotif.body.data as { type: string }[]).map((n) => n.type);
     expect(askerTypes.filter((t) => t === 'followed_question_answered')).toHaveLength(0);
     expect(askerTypes).toContain('question_answered');
+  });
+});
+
+describe('Achievements', () => {
+  // Tiny helper to yield until the fire-and-forget achievement check lands.
+  const settle = (): Promise<void> => new Promise((r) => setTimeout(r, 50));
+
+  test('posting the first question unlocks first_question + points notification fires', async () => {
+    const asker = await registerUser('ach_first_q');
+    await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${asker.token}`)
+      .send({ title: 'First question title', content: 'First question content body.' });
+    await settle();
+
+    const res = await request(app)
+      .get('/api/achievements/me')
+      .set('Authorization', `Bearer ${asker.token}`);
+    expect(res.status).toBe(200);
+    const unlocked = (res.body.data as { code: string; unlocked: boolean }[])
+      .filter((a) => a.unlocked)
+      .map((a) => a.code);
+    expect(unlocked).toContain('first_question');
+
+    const notif = await request(app)
+      .get('/api/notifications')
+      .set('Authorization', `Bearer ${asker.token}`);
+    const types = (notif.body.data as { type: string; payload: { code: string } }[])
+      .filter((n) => n.type === 'achievement_unlocked')
+      .map((n) => n.payload.code);
+    expect(types).toContain('first_question');
+  });
+
+  test('idempotent: posting 2 questions unlocks first_question exactly once', async () => {
+    const asker = await registerUser('ach_idem');
+    for (let i = 0; i < 2; i++) {
+      await request(app)
+        .post('/api/questions')
+        .set('Authorization', `Bearer ${asker.token}`)
+        .send({ title: `Idempotent q ${i}`, content: `Idempotent content ${i} body.` });
+      await settle();
+    }
+
+    const rows = await UserAchievement.findAll({ where: { userId: asker.id } });
+    const firstQ = rows.filter((r) => r.achievementCode === 'first_question');
+    expect(firstQ).toHaveLength(1);
+
+    const notif = await request(app)
+      .get('/api/notifications')
+      .set('Authorization', `Bearer ${asker.token}`);
+    const ach = (notif.body.data as { type: string; payload: { code: string } }[])
+      .filter((n) => n.type === 'achievement_unlocked' && n.payload.code === 'first_question');
+    expect(ach).toHaveLength(1);
+  });
+
+  test('answering + acceptance unlocks first_answer and first_accepted', async () => {
+    const asker = await registerUser('ach_asker');
+    const ans = await registerUser('ach_ans');
+    const q = await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${asker.token}`)
+      .send({ title: 'Q for answerer ach', content: 'Content for answerer ach body.' });
+
+    const a = await request(app)
+      .post(`/api/questions/${q.body.data.id}/answers`)
+      .set('Authorization', `Bearer ${ans.token}`)
+      .send({ content: 'An answer qualifying for achievement.' });
+    await settle();
+
+    await request(app)
+      .post(`/api/answers/${a.body.data.id}/accept`)
+      .set('Authorization', `Bearer ${asker.token}`);
+    await settle();
+
+    const list = await request(app)
+      .get('/api/achievements/me')
+      .set('Authorization', `Bearer ${ans.token}`);
+    const unlocked = (list.body.data as { code: string; unlocked: boolean }[])
+      .filter((x) => x.unlocked)
+      .map((x) => x.code);
+    expect(unlocked).toContain('first_answer');
+    expect(unlocked).toContain('first_accepted');
+  });
+
+  test('receiving a like unlocks liked_once on the author (not the voter)', async () => {
+    const author = await registerUser('ach_author');
+    const voter = await registerUser('ach_voter');
+    const q = await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${author.token}`)
+      .send({ title: 'Like me title here', content: 'Like me content body here.' });
+
+    await request(app)
+      .post('/api/votes')
+      .set('Authorization', `Bearer ${voter.token}`)
+      .send({ targetType: 'question', targetId: q.body.data.id });
+    await settle();
+
+    const authorList = await request(app)
+      .get('/api/achievements/me')
+      .set('Authorization', `Bearer ${author.token}`);
+    const authorUnlocked = (authorList.body.data as { code: string; unlocked: boolean }[])
+      .filter((x) => x.unlocked)
+      .map((x) => x.code);
+    expect(authorUnlocked).toContain('liked_once');
+
+    const voterList = await request(app)
+      .get('/api/achievements/me')
+      .set('Authorization', `Bearer ${voter.token}`);
+    const voterUnlocked = (voterList.body.data as { code: string; unlocked: boolean }[])
+      .filter((x) => x.unlocked)
+      .map((x) => x.code);
+    expect(voterUnlocked).not.toContain('liked_once');
+  });
+
+  test('progress field reflects current metric value for locked achievements', async () => {
+    const asker = await registerUser('ach_prog');
+    await request(app)
+      .post('/api/questions')
+      .set('Authorization', `Bearer ${asker.token}`)
+      .send({ title: 'Progress question title', content: 'Progress content body here.' });
+    await settle();
+
+    const res = await request(app)
+      .get('/api/achievements/me')
+      .set('Authorization', `Bearer ${asker.token}`);
+    const prolific = (res.body.data as { code: string; progress: number; unlocked: boolean }[])
+      .find((a) => a.code === 'prolific_asker');
+    expect(prolific).toBeDefined();
+    expect(prolific!.unlocked).toBe(false);
+    expect(prolific!.progress).toBe(1);
+  });
+
+  test('GET /api/achievements/me requires auth', async () => {
+    const res = await request(app).get('/api/achievements/me');
+    expect(res.status).toBe(401);
   });
 });

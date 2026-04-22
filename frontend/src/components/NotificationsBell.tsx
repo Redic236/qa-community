@@ -12,6 +12,7 @@ import { useNotificationStream } from '@/hooks/useNotificationStream';
 import type { AppNotification } from '@/types/models';
 
 function targetUrlOf(n: AppNotification): string | null {
+  if (n.type === 'achievement_unlocked') return '/achievements';
   const p = n.payload as { questionId?: number };
   if (typeof p.questionId === 'number') return `/questions/${p.questionId}`;
   return null;

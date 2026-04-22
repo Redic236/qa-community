@@ -15,6 +15,7 @@ import {
   ProfileOutlined,
   SafetyCertificateOutlined,
   DashboardOutlined,
+  TrophyOutlined,
 } from '@ant-design/icons';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -119,6 +120,12 @@ export default function Layout() {
                     icon: <ProfileOutlined />,
                     label: t('nav.profile'),
                     onClick: () => navigate('/profile'),
+                  },
+                  {
+                    key: 'achievements',
+                    icon: <TrophyOutlined />,
+                    label: t('nav.achievements'),
+                    onClick: () => navigate('/achievements'),
                   },
                   ...(user.role === 'admin'
                     ? [

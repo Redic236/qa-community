@@ -25,6 +25,7 @@
     "login": "登录",
     "register": "注册",
     "profile": "个人中心",
+    "achievements": "我的成就",
     "admin": "举报管理",
     "adminDashboard": "数据看板",
     "logout": "退出登录",
@@ -310,7 +311,45 @@
       "answer_liked": "点赞了你的回答",
       "content_removed": "管理员删除了你的内容",
       "followed_question_answered": "你关注的问题有了新回答",
-      "followed_user_posted": "你关注的用户发布了新问题"
+      "followed_user_posted": "你关注的用户发布了新问题",
+      "achievement_unlocked": "解锁了新成就"
+    }
+  },
+  "achievements": {
+    "title": "我的成就",
+    "subtitle": "完成任务解锁徽章",
+    "unlockedCount": "已解锁",
+    "empty": "还没有任何成就",
+    "loginRequired": "请先登录查看成就",
+    "unlockedAt": "{{time}} 解锁",
+    "tiers": {
+      "bronze": "铜",
+      "silver": "银",
+      "gold": "金"
+    },
+    "names": {
+      "first_question": "初次发问",
+      "prolific_asker": "提问达人",
+      "first_answer": "首次回答",
+      "prolific_answerer": "回答达人",
+      "first_accepted": "首次被采纳",
+      "well_accepted": "受欢迎的答主",
+      "liked_once": "获得第一个赞",
+      "hundred_likes": "百赞达人",
+      "points_100": "积分新手",
+      "points_500": "积分大师"
+    },
+    "descriptions": {
+      "first_question": "发布你的第一个问题",
+      "prolific_asker": "累计发布 {{threshold}} 个问题",
+      "first_answer": "发布你的第一个回答",
+      "prolific_answerer": "累计发布 {{threshold}} 个回答",
+      "first_accepted": "有一个回答被采纳",
+      "well_accepted": "累计 {{threshold}} 个回答被采纳",
+      "liked_once": "内容获得第一个赞",
+      "hundred_likes": "累计获得 {{threshold}} 个赞",
+      "points_100": "积分达到 {{threshold}}",
+      "points_500": "积分达到 {{threshold}}"
     }
   },
   "errors": {

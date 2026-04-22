@@ -83,7 +83,27 @@ export type NotificationType =
   | 'answer_liked'
   | 'content_removed'
   | 'followed_question_answered'
-  | 'followed_user_posted';
+  | 'followed_user_posted'
+  | 'achievement_unlocked';
+
+export type AchievementTier = 'bronze' | 'silver' | 'gold';
+export type AchievementMetric =
+  | 'questions_created'
+  | 'answers_created'
+  | 'answers_accepted'
+  | 'likes_received'
+  | 'points_total';
+
+export interface AchievementStatus {
+  code: string;
+  tier: AchievementTier;
+  metric: AchievementMetric;
+  threshold: number;
+  icon: string;
+  unlocked: boolean;
+  unlockedAt: string | null;
+  progress: number | null;
+}
 
 export type FollowTargetType = 'user' | 'question';
 

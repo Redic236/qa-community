@@ -28,6 +28,7 @@ import type {
   FollowTargetType,
   FollowedUserEntry,
   FollowedQuestionEntry,
+  AchievementStatus,
 } from '@/types/models';
 
 const rawBaseQuery = fetchBaseQuery({
@@ -73,6 +74,7 @@ export const apiSlice = createApi({
     'AdminStats',
     'Leaderboard',
     'Follows',
+    'Achievements',
   ],
   endpoints: (build) => ({
     register: build.mutation<AuthResult, { username: string; email: string; password: string }>({
@@ -355,6 +357,12 @@ export const apiSlice = createApi({
       providesTags: [{ type: 'Follows', id: 'question' }],
     }),
 
+    listMyAchievements: build.query<AchievementStatus[], void>({
+      query: () => '/achievements/me',
+      transformResponse: (r: ApiOk<AchievementStatus[]>) => unwrap(r),
+      providesTags: ['Achievements'],
+    }),
+
     getUserLeaderboard: build.query<LeaderboardUser[], { limit?: number } | void>({
       query: (arg) => {
         const limit = arg && 'limit' in arg && arg.limit ? arg.limit : 20;
@@ -436,4 +444,5 @@ export const {
   useToggleFollowMutation,
   useListMyFollowedUsersQuery,
   useListMyFollowedQuestionsQuery,
+  useListMyAchievementsQuery,
 } = apiSlice;

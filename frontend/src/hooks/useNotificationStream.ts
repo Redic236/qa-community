@@ -25,7 +25,9 @@ export function useNotificationStream(token: string | null): void {
     const es = new EventSource(url);
 
     const onNotification = () => {
-      dispatch(apiSlice.util.invalidateTags(['Notifications']));
+      // Achievement unlocks come in as notifications too — refresh both caches
+      // so the badge wall lights up immediately without a manual reload.
+      dispatch(apiSlice.util.invalidateTags(['Notifications', 'Achievements']));
     };
 
     es.addEventListener('notification', onNotification);

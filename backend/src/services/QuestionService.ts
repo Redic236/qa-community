@@ -6,6 +6,7 @@ import { ModerationService } from './ModerationService';
 import { CacheService, cacheKeys } from './CacheService';
 import { NotificationService, NOTIF } from './NotificationService';
 import { FollowService } from './FollowService';
+import { AchievementService } from './AchievementService';
 import { FOLLOW_TARGET_TYPE } from '../models/Follow';
 import { ROLES, type Role } from '../utils/constants';
 import { ForbiddenError, NotFoundError } from '../utils/errors';
@@ -151,6 +152,11 @@ export class QuestionService {
         console.warn('[follow-fanout] question create:', (err as Error).message);
       }
     })();
+
+    // Achievement check (first_question, prolific_asker) — also async post-commit.
+    void AchievementService.checkAndGrant(input.authorId, 'question.create');
+    // Points may have just crossed a threshold too.
+    void AchievementService.checkAndGrant(input.authorId, 'points.award');
 
     return question;
   }
