@@ -1,0 +1,309 @@
+{
+  "common": {
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "submit": "提交",
+    "publish": "发布",
+    "loading": "加载中",
+    "noData": "暂无数据",
+    "back": "返回",
+    "yes": "是",
+    "no": "否",
+    "operation": "操作",
+    "createdAt": "时间",
+    "search": "搜索",
+    "clear": "清除",
+    "confirm": "确认"
+  },
+  "nav": {
+    "siteTitle": "问答社区",
+    "home": "首页",
+    "ask": "提问",
+    "login": "登录",
+    "register": "注册",
+    "profile": "个人中心",
+    "admin": "举报管理",
+    "adminDashboard": "数据看板",
+    "logout": "退出登录",
+    "points": "积分 {{value}}"
+  },
+  "auth": {
+    "loginTitle": "登录",
+    "registerTitle": "注册",
+    "createAccount": "创建账户",
+    "username": "用户名",
+    "email": "邮箱",
+    "password": "密码",
+    "currentPassword": "当前密码",
+    "newPassword": "新密码",
+    "haveAccount": "已有账号?",
+    "goLogin": "去登录",
+    "noAccount": "还没有账号?",
+    "goRegister": "立即注册",
+    "usernamePlaceholder": "3-50 字符",
+    "emailPlaceholder": "you@example.com",
+    "passwordPlaceholderMin": "至少 6 位",
+    "passwordPlaceholderMask": "******",
+    "errors": {
+      "usernameMin": "用户名至少 3 个字符",
+      "usernameMax": "用户名最长 50 字符",
+      "emailRequired": "请输入邮箱",
+      "emailInvalid": "邮箱格式不正确",
+      "passwordMin": "密码至少 6 位",
+      "passwordMax": "密码最长 100 位"
+    }
+  },
+  "home": {
+    "tabs": {
+      "latest": "最新",
+      "popular": "热门",
+      "unsolved": "未解决"
+    },
+    "searchPlaceholder": "搜索标题或内容（点击下方标签可按标签筛选）",
+    "filterKeyword": "关键词: {{value}}",
+    "filterTag": "标签: {{value}}",
+    "emptyNoMatch": "没有匹配的问题",
+    "emptyNoMatchHint": "试试别的关键词或清除筛选",
+    "emptyClear": "清除筛选",
+    "emptyNoQuestions": "还没有任何问题",
+    "emptyHintLoggedIn": "成为第一个提问者吧",
+    "emptyHintAnon": "登录后即可发布问题、回答和点赞",
+    "emptyActionFirstAsk": "发布第一个问题",
+    "emptyActionLogin": "登录 / 注册",
+    "stats": {
+      "votes": "{{count}} 赞",
+      "answers": "{{count}} 回答",
+      "solved": "已解决"
+    },
+    "likeLoginPrompt": "登录后即可点赞"
+  },
+  "question": {
+    "askedAt": "提问于 {{time}}",
+    "solved": "已解决",
+    "unsolved": "未解决",
+    "publishTitle": "发布问题",
+    "publishHint": "每次发问扣 5 积分。被点赞 +5，被采纳的回答作者得 +30。",
+    "title": "标题",
+    "titleHint": "简明扼要描述问题（5-200 字符）",
+    "titlePlaceholder": "例如：React 中 useEffect 与 useLayoutEffect 区别？",
+    "content": "内容",
+    "contentHint": "至少 10 个字符；支持换行",
+    "contentPlaceholder": "详细说明你的问题、已尝试的方案、期望的答案...",
+    "tags": "标签",
+    "tagsHintMax": "最多 5 个，回车确认",
+    "tagsHintMaxFull": "最多 5 个标签",
+    "tagInputPlaceholder": "输入标签后按回车",
+    "tagInputDisabled": "已达上限",
+    "deleteConfirmTitle": "确定删除这个问题？",
+    "deleteConfirmDesc": "所有回答和点赞会一起删除，无法恢复。",
+    "deleted": "问题已删除",
+    "editTitle": "编辑问题",
+    "errors": {
+      "titleMin": "标题至少 5 个字符",
+      "titleMax": "标题最长 200 字符",
+      "contentMin": "内容至少 10 个字符",
+      "tagsMax": "最多 5 个标签"
+    },
+    "invalidId": "无效的问题 ID",
+    "notFound": "Question not found"
+  },
+  "answer": {
+    "countLabel": "{{count}} 个回答",
+    "writeTitle": "写回答",
+    "publishButton": "发布回答",
+    "placeholder": "写下你的答案...",
+    "loginPrompt": "请先 {{login}} 后再回答",
+    "selfAnswerHint": "提问者本人也可以回答自己的问题（自答被采纳不加分）",
+    "accept": "采纳此答案",
+    "unaccept": "取消采纳",
+    "accepted": "已采纳",
+    "acceptedSuccess": "已采纳",
+    "unacceptedSuccess": "已取消采纳",
+    "deleteConfirmTitle": "确定删除这条回答？",
+    "deleted": "回答已删除",
+    "editTitle": "编辑回答",
+    "publishedSuccess": "回答发布成功",
+    "emptyTitle": "还没有人回答这个问题",
+    "emptyHint": "第一个回答常常被采纳，机会就在眼前",
+    "emptyAction": "写第一个回答",
+    "errors": {
+      "contentMin": "至少 5 个字符"
+    }
+  },
+  "vote": {
+    "likeQuestion": "点赞问题",
+    "unlikeQuestion": "取消点赞问题",
+    "likeAnswer": "点赞回答 {{id}}",
+    "unlikeAnswer": "取消点赞回答 {{id}}",
+    "selfHint": "不能给自己点赞"
+  },
+  "comment": {
+    "addComment": "添加评论",
+    "reply": "回应",
+    "publishButton": "发布",
+    "placeholder": "写下你的评论（2-500 字符）",
+    "deleteConfirm": "删除这条评论？",
+    "deleteAria": "删除评论",
+    "minWarning": "评论至少 2 个字符",
+    "userPrefix": "用户 #{{id}}"
+  },
+  "profile": {
+    "currentPoints": "当前积分",
+    "userId": "用户 ID",
+    "registeredAt": "注册时间",
+    "editProfile": "编辑资料",
+    "saved": "资料已更新",
+    "modalTitle": "编辑个人资料",
+    "avatarLabel": "头像 URL",
+    "avatarHint": "留空表示使用默认头像",
+    "avatarPlaceholder": "https://...",
+    "passwordSection": "修改密码（可选）",
+    "newPasswordHint": "至少 6 位；留空则不修改",
+    "errors": {
+      "avatarMustBeUrl": "头像必须是 http(s) 链接",
+      "newPasswordMin": "新密码至少 6 位",
+      "currentPasswordRequired": "修改密码需要填写当前密码"
+    },
+    "history": {
+      "title": "积分流水",
+      "type": "类型",
+      "delta": "变动",
+      "relatedId": "关联 ID",
+      "empty": "还没有积分流水",
+      "emptyHint": "发布问题、回答、被点赞或被采纳后这里会有记录",
+      "emptyAction": "去发布问题",
+      "types": {
+        "ask": "发布问题",
+        "answer": "回答问题",
+        "accept": "回答被采纳",
+        "like_question": "问题被点赞",
+        "like_answer": "回答被点赞"
+      }
+    }
+  },
+  "level": {
+    "names": {
+      "novice": "新手",
+      "active": "活跃",
+      "experienced": "资深",
+      "expert": "专家",
+      "master": "大师"
+    },
+    "max": "已达最高等级",
+    "next": "距下一级（{{threshold}}）还差 {{diff}} 分",
+    "currentVsNext": "当前 {{points}} 分，距下一级（{{threshold}}）还差 {{diff}}"
+  },
+  "report": {
+    "tooltip": "举报",
+    "modalTitle": "举报内容",
+    "reason": "原因",
+    "detailsLabel": "补充说明（可选）",
+    "detailsPlaceholder": "如有具体细节请说明，最多 500 字",
+    "submit": "提交举报",
+    "submitted": "举报已提交，感谢反馈",
+    "reasons": {
+      "spam": "垃圾广告",
+      "spamHint": "推销 / 引流 / 重复刷屏",
+      "offensive": "攻击/侮辱",
+      "offensiveHint": "人身攻击 / 仇恨言论",
+      "off_topic": "与主题无关",
+      "off_topicHint": "完全跑题或灌水",
+      "duplicate": "重复内容",
+      "duplicateHint": "已有同样的问题/答案",
+      "other": "其他",
+      "otherHint": "请在下方说明"
+    },
+    "errors": {
+      "detailsMax": "不超过 500 字"
+    }
+  },
+  "admin": {
+    "tabsPending": "待处理",
+    "tabsKept": "已保留",
+    "tabsRemoved": "已删除",
+    "columns": {
+      "time": "时间",
+      "target": "目标",
+      "reason": "原因",
+      "details": "补充说明",
+      "reporter": "举报人",
+      "status": "状态",
+      "actions": "操作"
+    },
+    "targetQuestion": "问题",
+    "targetAnswer": "回答",
+    "viewTarget": "查看 #{{id}}",
+    "answerTarget": "回答 #{{id}}",
+    "actionKeep": "保留",
+    "actionRemove": "删除内容",
+    "expandSymbol": "展开",
+    "removeConfirmTitle": "确定删除被举报的内容？",
+    "removeConfirmDesc": "同一目标其他待处理举报会一并标记为已删除。",
+    "kept": "已标记保留",
+    "removed": "已删除内容并关闭举报",
+    "noPermission": "需要管理员权限"
+  },
+  "dashboard": {
+    "title": "数据看板",
+    "subtitle": "近 30 天活动概览",
+    "subtitleDays": "近 {{days}} 天活动概览",
+    "range": "近 {{days}} 天",
+    "trendsTitleDays": "近 {{days}} 天趋势",
+    "kpis": {
+      "users": "用户总数",
+      "questions": "问题总数",
+      "answers": "回答总数",
+      "comments": "评论总数",
+      "pendingReports": "待处理举报",
+      "newUsers7d": "近 7 天新用户",
+      "newQuestions7d": "近 7 天新问题"
+    },
+    "trendsTitle": "近 30 天趋势",
+    "trends": {
+      "questions": "新问题",
+      "answers": "新回答",
+      "comments": "新评论",
+      "newUsers": "新用户"
+    },
+    "topUsersTitle": "积分榜 Top 10",
+    "topUsersColumns": {
+      "rank": "排名",
+      "user": "用户",
+      "points": "积分"
+    },
+    "topTagsTitle": "热门标签 Top 10",
+    "topTagsColumns": {
+      "tag": "标签",
+      "count": "问题数"
+    },
+    "empty": "暂无数据"
+  },
+  "notification": {
+    "title": "通知",
+    "markAll": "全部已读",
+    "empty": "暂无通知",
+    "markedSuccess": "已标记 {{count}} 条为已读",
+    "ariaLabel": "通知",
+    "types": {
+      "question_answered": "回答了你的问题",
+      "answer_accepted": "采纳了你的回答",
+      "question_liked": "点赞了你的问题",
+      "answer_liked": "点赞了你的回答",
+      "content_removed": "管理员删除了你的内容"
+    }
+  },
+  "errors": {
+    "notFound": "页面不存在",
+    "backHome": "回到首页",
+    "fetchFail": "网络异常，请检查后端服务是否启动",
+    "unexpected": "Unexpected error",
+    "invalidQuestionId": "无效的问题 ID"
+  },
+  "language": {
+    "zhCN": "中文",
+    "enUS": "English",
+    "switch": "切换语言"
+  }
+}

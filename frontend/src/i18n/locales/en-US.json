@@ -1,0 +1,309 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "submit": "Submit",
+    "publish": "Publish",
+    "loading": "Loading",
+    "noData": "No data",
+    "back": "Back",
+    "yes": "Yes",
+    "no": "No",
+    "operation": "Actions",
+    "createdAt": "Time",
+    "search": "Search",
+    "clear": "Clear",
+    "confirm": "Confirm"
+  },
+  "nav": {
+    "siteTitle": "Q&A",
+    "home": "Home",
+    "ask": "Ask",
+    "login": "Log in",
+    "register": "Sign up",
+    "profile": "Profile",
+    "admin": "Reports",
+    "adminDashboard": "Dashboard",
+    "logout": "Sign out",
+    "points": "{{value}} pts"
+  },
+  "auth": {
+    "loginTitle": "Log in",
+    "registerTitle": "Sign up",
+    "createAccount": "Create account",
+    "username": "Username",
+    "email": "Email",
+    "password": "Password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "haveAccount": "Have an account?",
+    "goLogin": "Log in",
+    "noAccount": "New here?",
+    "goRegister": "Sign up",
+    "usernamePlaceholder": "3-50 characters",
+    "emailPlaceholder": "you@example.com",
+    "passwordPlaceholderMin": "at least 6 chars",
+    "passwordPlaceholderMask": "******",
+    "errors": {
+      "usernameMin": "Username must be at least 3 characters",
+      "usernameMax": "Username must be at most 50 characters",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Email is not valid",
+      "passwordMin": "Password must be at least 6 characters",
+      "passwordMax": "Password must be at most 100 characters"
+    }
+  },
+  "home": {
+    "tabs": {
+      "latest": "Newest",
+      "popular": "Popular",
+      "unsolved": "Unsolved"
+    },
+    "searchPlaceholder": "Search title or content (click a tag below to filter)",
+    "filterKeyword": "Keyword: {{value}}",
+    "filterTag": "Tag: {{value}}",
+    "emptyNoMatch": "No matching questions",
+    "emptyNoMatchHint": "Try a different keyword or clear the filter",
+    "emptyClear": "Clear filters",
+    "emptyNoQuestions": "No questions yet",
+    "emptyHintLoggedIn": "Be the first to ask",
+    "emptyHintAnon": "Sign in to ask, answer, and like",
+    "emptyActionFirstAsk": "Ask the first question",
+    "emptyActionLogin": "Log in / Sign up",
+    "stats": {
+      "votes": "{{count}} votes",
+      "answers": "{{count}} answers",
+      "solved": "Solved"
+    },
+    "likeLoginPrompt": "Log in to like"
+  },
+  "question": {
+    "askedAt": "Asked at {{time}}",
+    "solved": "Solved",
+    "unsolved": "Unsolved",
+    "publishTitle": "Ask a question",
+    "publishHint": "Asking costs 5 pts. +5 per like, the accepted answer's author earns +30.",
+    "title": "Title",
+    "titleHint": "Summarize the problem (5-200 chars)",
+    "titlePlaceholder": "e.g. What's the difference between useEffect and useLayoutEffect?",
+    "content": "Body",
+    "contentHint": "At least 10 characters; line breaks supported",
+    "contentPlaceholder": "Describe what you tried, what you expected, what happened...",
+    "tags": "Tags",
+    "tagsHintMax": "Up to 5; press Enter to add",
+    "tagsHintMaxFull": "Up to 5 tags",
+    "tagInputPlaceholder": "Type a tag and press Enter",
+    "tagInputDisabled": "Limit reached",
+    "deleteConfirmTitle": "Delete this question?",
+    "deleteConfirmDesc": "All answers and likes will be removed. This can't be undone.",
+    "deleted": "Question deleted",
+    "editTitle": "Edit question",
+    "errors": {
+      "titleMin": "Title must be at least 5 characters",
+      "titleMax": "Title must be at most 200 characters",
+      "contentMin": "Content must be at least 10 characters",
+      "tagsMax": "At most 5 tags"
+    },
+    "invalidId": "Invalid question id",
+    "notFound": "Question not found"
+  },
+  "answer": {
+    "countLabel": "{{count}} answers",
+    "writeTitle": "Your answer",
+    "publishButton": "Post answer",
+    "placeholder": "Write your answer here...",
+    "loginPrompt": "Please {{login}} first to answer",
+    "selfAnswerHint": "You may answer your own question (no points if self-accepted)",
+    "accept": "Accept this answer",
+    "unaccept": "Unaccept",
+    "accepted": "Accepted",
+    "acceptedSuccess": "Accepted",
+    "unacceptedSuccess": "Acceptance removed",
+    "deleteConfirmTitle": "Delete this answer?",
+    "deleted": "Answer deleted",
+    "editTitle": "Edit answer",
+    "publishedSuccess": "Answer posted",
+    "emptyTitle": "No answers yet",
+    "emptyHint": "Early answers often get accepted — your turn",
+    "emptyAction": "Write the first answer",
+    "errors": {
+      "contentMin": "At least 5 characters"
+    }
+  },
+  "vote": {
+    "likeQuestion": "Like question",
+    "unlikeQuestion": "Unlike question",
+    "likeAnswer": "Like answer {{id}}",
+    "unlikeAnswer": "Unlike answer {{id}}",
+    "selfHint": "Can't like your own content"
+  },
+  "comment": {
+    "addComment": "Add comment",
+    "reply": "Reply",
+    "publishButton": "Post",
+    "placeholder": "Write your comment (2-500 chars)",
+    "deleteConfirm": "Delete this comment?",
+    "deleteAria": "Delete comment",
+    "minWarning": "Comment must be at least 2 characters",
+    "userPrefix": "user #{{id}}"
+  },
+  "profile": {
+    "currentPoints": "Points",
+    "userId": "User ID",
+    "registeredAt": "Joined",
+    "editProfile": "Edit profile",
+    "saved": "Profile updated",
+    "modalTitle": "Edit profile",
+    "avatarLabel": "Avatar URL",
+    "avatarHint": "Leave blank for default",
+    "avatarPlaceholder": "https://...",
+    "passwordSection": "Change password (optional)",
+    "newPasswordHint": "At least 6 chars; blank to keep current",
+    "errors": {
+      "avatarMustBeUrl": "Avatar must be an http(s) link",
+      "newPasswordMin": "New password must be at least 6 characters",
+      "currentPasswordRequired": "Changing password requires the current one"
+    },
+    "history": {
+      "title": "Points history",
+      "type": "Type",
+      "delta": "Change",
+      "relatedId": "Related",
+      "empty": "No points history yet",
+      "emptyHint": "Asking, answering, and getting likes will appear here",
+      "emptyAction": "Ask a question",
+      "types": {
+        "ask": "Posted a question",
+        "answer": "Posted an answer",
+        "accept": "Answer accepted",
+        "like_question": "Question liked",
+        "like_answer": "Answer liked"
+      }
+    }
+  },
+  "level": {
+    "names": {
+      "novice": "Novice",
+      "active": "Active",
+      "experienced": "Experienced",
+      "expert": "Expert",
+      "master": "Master"
+    },
+    "max": "Top tier reached",
+    "next": "{{diff}} pts to next tier ({{threshold}})",
+    "currentVsNext": "Currently {{points}} pts, {{diff}} to next ({{threshold}})"
+  },
+  "report": {
+    "tooltip": "Report",
+    "modalTitle": "Report content",
+    "reason": "Reason",
+    "detailsLabel": "Additional details (optional)",
+    "detailsPlaceholder": "Add specifics if helpful, max 500 chars",
+    "submit": "Submit report",
+    "submitted": "Report submitted, thanks",
+    "reasons": {
+      "spam": "Spam",
+      "spamHint": "Promotion / link bait / repeats",
+      "offensive": "Offensive",
+      "offensiveHint": "Personal attacks / hate speech",
+      "off_topic": "Off-topic",
+      "off_topicHint": "Doesn't belong here",
+      "duplicate": "Duplicate",
+      "duplicateHint": "Already exists",
+      "other": "Other",
+      "otherHint": "Please explain below"
+    },
+    "errors": {
+      "detailsMax": "Max 500 characters"
+    }
+  },
+  "admin": {
+    "tabsPending": "Pending",
+    "tabsKept": "Kept",
+    "tabsRemoved": "Removed",
+    "columns": {
+      "time": "Time",
+      "target": "Target",
+      "reason": "Reason",
+      "details": "Details",
+      "reporter": "Reporter",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "targetQuestion": "Question",
+    "targetAnswer": "Answer",
+    "viewTarget": "View #{{id}}",
+    "answerTarget": "Answer #{{id}}",
+    "actionKeep": "Keep",
+    "actionRemove": "Remove content",
+    "expandSymbol": "Expand",
+    "removeConfirmTitle": "Remove the reported content?",
+    "removeConfirmDesc": "Other pending reports on the same target will close too.",
+    "kept": "Marked as kept",
+    "removed": "Content removed and report closed",
+    "noPermission": "Admin access required"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Activity overview for the last 30 days",
+    "subtitleDays": "Activity overview for the last {{days}} days",
+    "range": "Last {{days}}d",
+    "trendsTitleDays": "Last {{days}} days",
+    "kpis": {
+      "users": "Total users",
+      "questions": "Total questions",
+      "answers": "Total answers",
+      "comments": "Total comments",
+      "pendingReports": "Pending reports",
+      "newUsers7d": "New users (7d)",
+      "newQuestions7d": "New questions (7d)"
+    },
+    "trendsTitle": "Last 30 days",
+    "trends": {
+      "questions": "New questions",
+      "answers": "New answers",
+      "comments": "New comments",
+      "newUsers": "New users"
+    },
+    "topUsersTitle": "Top 10 by points",
+    "topUsersColumns": {
+      "rank": "Rank",
+      "user": "User",
+      "points": "Points"
+    },
+    "topTagsTitle": "Top 10 tags",
+    "topTagsColumns": {
+      "tag": "Tag",
+      "count": "Questions"
+    },
+    "empty": "No data yet"
+  },
+  "notification": {
+    "title": "Notifications",
+    "markAll": "Mark all read",
+    "empty": "No notifications",
+    "markedSuccess": "Marked {{count}} as read",
+    "ariaLabel": "Notifications",
+    "types": {
+      "question_answered": "answered your question",
+      "answer_accepted": "accepted your answer",
+      "question_liked": "liked your question",
+      "answer_liked": "liked your answer",
+      "content_removed": "an admin removed your content"
+    }
+  },
+  "errors": {
+    "notFound": "Page not found",
+    "backHome": "Back to home",
+    "fetchFail": "Network issue — make sure the backend is running",
+    "unexpected": "Unexpected error",
+    "invalidQuestionId": "Invalid question id"
+  },
+  "language": {
+    "zhCN": "中文",
+    "enUS": "English",
+    "switch": "Language"
+  }
+}
